@@ -1,0 +1,34 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+	  <title>An example of 'cluster.py' work</title>
+  	<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7/leaflet.css" />
+    <link href='http://fonts.googleapis.com/css?family=PT+Sans:400,700' rel='stylesheet' type='text/css'>
+  	<script src="http://cdn.leafletjs.com/leaflet-0.7/leaflet.js"></script>
+	  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  	<link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <!--   создаем массивы для точек и центроидов   -->
+    <script type="text/javascript">cs = []; cd = []; ps = []; pd = []</script>
+    <!------------------------------------------------>
+    <div id="left">
+      <span class="label" id="cur"></span>
+      <br /><br />
+      <input type="button" id="larrow" value="&#8592;" onClick="time_rem()" disabled />
+      <input type="tel" id="time" value="0" onInput="time_set()"/>
+      <input type="button" id="rarrow" value="&#8594;" onClick="time_add()" /><br /><br />
+      <span class="label" id="comment"></span>
+    </div>
+    <input type="button" id="hide" value="&#8656;" onClick="hide()">
+    <div id="map"></div>
+    <div id="cover"><a href="/">back</a></div>
+    <!-- считываем данные из файлов -->
+    <script src="data_cs.js"></script>
+    <script src="data_cd.js"></script>
+    <script src="data_ps.js"></script>
+    <script src="data_pd.js"></script>
+    <!-------------------------------->
+    <script src="main.js"></script>
+  </body>
+</html>

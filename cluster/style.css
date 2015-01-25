@@ -34,7 +34,7 @@ body {
   bottom: 0;
   width: calc(100% - 152px);
   z-index: 0;
-  border-left: 2px solid #0d1724;
+  border-left: 2px solid #000;
 }
 
 #larrow, #rarrow {
@@ -46,9 +46,9 @@ body {
   position: absolute;
   top: 0;
   height: 50px;
-  background: #e9e0d6;
-  border-left: 2px solid #0d1724;
-  border-bottom: 2px solid #0d1724;
+  background: #fff;
+  border-left: 2px solid #000;
+  border-bottom: 2px solid #000;
   border-bottom-left-radius: 15px;
   text-align: center;
   right: 0;
@@ -59,11 +59,11 @@ body {
 #cover a {
   font-weight: bold;
   text-decoration: none;
-  color: #0d1724;
+  color: #000;
 }
 
 #cover a:hover {
-  color: #eb7260;
+  opacity: 0.5;
 }
 
 #hide {

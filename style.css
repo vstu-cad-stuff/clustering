@@ -1,42 +1,69 @@
-html, body {
+html {
   width: 100%;
 }
 
 body {
-  margin: 0;
+  margin: 0 auto;
+  padding-top: 10px;
   font-family: 'PT Sans', serif;
-  background: #354458;
+  background: #fff;
+  width: 800px;
 }
 
-#logo {
+#path {
+  display: inline-block;
+  margin-bottom: 2em;
+}
+
+#path span {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+#path a {
   font-size: 25pt;
-  display: block;
-  width: 800px;
-  margin: 0 auto;
-  color: #e9e0d6;
+  color: #000;
   text-decoration: none;
   font-family: 'Roboto Slab', serif;
 }
 
+#path a:hover {
+  opacity: 0.5;
+}
+
+#logo {
+  width: 100px;
+  vertical-align: middle;
+  margin-top: 15px;
+}
+
 #logo:hover {
-  color: #eb7260;
+	opacity: 0.5;
+}
+
+#path .separator {
+  height: 30px;
+  margin-left: -10px;
+  margin-right: 5px;
+  vertical-align: middle;
+}
+
+hr {
+  border: 0;
+  border-top: 1px dashed #000;
+  height: 0;
 }
 
 #wrapper {
-  margin: 1em auto;
-  background: #e9e0d6;
-  padding: 20px 20px;
-  box-shadow: 0 0 15px rgba(0, 0, 0, 1);
+  padding: 0 40px;
 }
 
 #main {
   text-align: left;
-  width: 800px;
-  margin: 0 auto;
 }
 
 #main span {
-  color: #0d1724;
+  color: #000;
   font-size: 12pt;
 }
 
@@ -48,12 +75,12 @@ body {
   display: block;
   margin: 0 10px;
   font-weight: bold;
-  color: #0d1724;
+  color: #000;
   width: auto;
 }
 
 .links a:hover {
-  color: #eb7260;
+  opacity: .5;
 }
 
 .links a { 

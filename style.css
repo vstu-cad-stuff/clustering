@@ -54,16 +54,11 @@ hr {
   height: 0;
 }
 
-#wrapper {
+.wrapper {
   padding: 0 40px;
 }
 
-#main {
-  text-align: left;
-}
-
 #main span {
-  color: #000;
   font-size: 12pt;
 }
 
@@ -75,8 +70,6 @@ hr {
   display: block;
   margin: 0 10px;
   font-weight: bold;
-  color: #000;
-  width: auto;
 }
 
 .links a:hover {
@@ -85,5 +78,34 @@ hr {
 
 .links a { 
   text-decoration: none;
-  color: inherit;
+  color: #000;
+}
+
+#footer {
+  font-size: 10pt;
+  text-align: left;
+}
+
+#footer span {
+  display: block;
+  margin: -5px 40px;
+}
+
+.references {
+  list-style: none;
+  display: inline-block;
+}
+
+.references li {
+  display: inline-block;
+  font-weight: bold;
+}
+
+.references a:hover {
+  opacity: .5;
+}
+
+.references a { 
+  text-decoration: none;
+  color: #000;
 }

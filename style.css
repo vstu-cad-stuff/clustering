@@ -1,5 +1,6 @@
 html {
   width: 100%;
+  height: 100%;
 }
 
 body {
@@ -8,6 +9,7 @@ body {
   font-family: 'PT Sans', serif;
   background: #fff;
   width: 800px;
+  height: 100%;
 }
 
 #path {
@@ -70,6 +72,11 @@ hr {
   display: block;
   margin: 0 10px;
   font-weight: bold;
+}
+
+.links li span{
+  font-weight: normal;
+  font-size: 10pt;
 }
 
 .links a:hover {

@@ -1,0 +1,128 @@
+body {
+  margin: 0;
+  padding: 0;
+}
+
+#map {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 100%;
+  z-index: 0;
+}
+
+#tools {
+  display: block;
+  width: 286px;
+  left: calc(50% - 162px);
+  bottom: 60px;
+  position: absolute;
+  z-index: 1;
+  list-style: none;
+  background-color: #fff;
+  border-radius: 5px;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, .65);
+  height: 50px;
+  vertical-align: middle;
+  overflow: hidden;
+}
+
+#tools li{
+  display: inline-block;
+  border-right: 1px solid #888;
+  vertical-align: middle;
+  padding: 5px;
+  opacity: .5;
+}
+
+#tools li.selected, #tools li.save {
+  opacity: 1;
+}
+
+#tools li.save button {
+  background-color: #bbb;
+}
+
+#tools li:hover {
+  opacity: 1;
+}
+
+#tools li.first{
+  margin-left: -35px;
+  padding-left: 0;
+}
+
+#tools li.last {
+  border: 0;
+  padding-right: 0;
+}
+
+#tools li button {
+  border: none;
+  padding: none;
+  height: 40px;
+  width: 40px;
+  vertical-align: middle;
+  background-color: #fff;
+  background-size: contain;
+}
+
+#input {
+  display: block;
+  text-align: center;
+  width: 220px;
+  left: calc(50% - 110px);
+  bottom: 20px;
+  height: 50px;
+  position: absolute;
+  z-index: 2;
+  background-color: #fff;
+  border-radius: 5px;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, .65);
+  vertical-align: middle;
+  overflow: hidden;
+  visibility: hidden;
+  font-size: 12pt;
+}
+
+#input input {
+  text-align: center;
+}
+
+#cover, #error {
+  position: absolute;
+  top: 0;
+  height: 50px;
+  background: #fff;
+  border: none;
+  border-bottom-left-radius: 5px;
+  text-align: center;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, .65);
+  z-index: 2;
+}
+
+#cover {
+  right: 0;
+  width: 75px;
+  line-height: 50px;
+}
+
+#error {
+  left: calc(50% - 115px);
+  border-bottom-right-radius: 5px;
+  visibility: hidden;
+  background: #fff;
+  line-height: 22px;
+  width: 230px;
+}
+
+#cover a, #error a {
+  font-weight: bold;
+  text-decoration: none;
+  color: #000;
+}
+
+#cover a:hover, #error a:hover {
+  opacity: .5;
+}

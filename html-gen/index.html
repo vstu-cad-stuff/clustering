@@ -1,0 +1,74 @@
+<html>
+  <head>
+    <title>Gen on map</title>
+    <script type="text/javascript">
+      var error = false;
+      script_error = function() {
+        error = true;
+      }
+    </script>
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7/leaflet.css" />
+    <link href='http://fonts.googleapis.com/css?family=PT+Sans:400,700' rel='stylesheet' type='text/css'>
+    <script src="http://cdn.leafletjs.com/leaflet-0.7/leaflet.js" onerror="script_error()"></script>
+    <script src="https://rawgit.com/bbecquet/Leaflet.PolylineDecorator/master/src/L.Symbol.js" onerror="script_error()"></script>
+    <script src="https://rawgit.com/bbecquet/Leaflet.PolylineDecorator/master/src/L.PolylineDecorator.js" onerror="script_error()"></script>
+    <script src="https://rawgit.com/bbecquet/Leaflet.PolylineDecorator/master/src/L.LineUtil.PolylineDecorator.js" onerror="script_error()"></script>
+    <link rel="stylesheet" href="main.css" />
+  </head>
+  <body>
+    <div id="map"></div>
+    <ul id="tools">
+      <li class="first selected" id="select">
+        <button
+          style="background-image: url('img/pointer.png')"
+          onClick="select('select')"
+          title="Select points"
+        />
+      </li>
+      <li id="points">
+        <button
+          style="background-image: url('img/p2p.png')"
+          onClick="select('points')"
+          title="Set points one by one"
+        />
+      </li>
+      <li id="spray">
+        <button
+          style="background-image: url('img/spray.png')"
+          onClick="select('spray')"
+          title="Set points around click position"
+        />
+      </li>
+      <li id="random">
+        <button
+          style="background-image: url('img/uniform.png')"
+          onClick="select('random')"
+          title="Set points in a bounding box of a map on screen"
+        />
+      </li>
+      <li id="delete">
+        <button
+          style="background-image: url('img/delete.png')"
+          onClick="select('delete')"
+          title="Delete couple of points with same userid"
+        />
+      </li>
+      <li class="last save">
+        <button
+          style="background-image: url('img/save.png')"
+          onClick="save()"
+          title="Save points"
+          disabled
+        />
+      </li>
+    </ul>
+    <div id="input">
+      Point's count: <br />
+      <input type="input" id="count" />
+    </div>
+    <div id="cover"><a href="/clustering">back</a></div>
+    <div id="error">Error while loading scripts <br/>
+      Try to <a href='javascript:reload()'>reload</a> the page</div>
+    <script src="main.js"></script>
+  </body>
+</html>

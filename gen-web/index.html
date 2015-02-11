@@ -10,26 +10,24 @@
     <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7/leaflet.css" />
     <link href='http://fonts.googleapis.com/css?family=PT+Sans:400,700' rel='stylesheet' type='text/css'>
     <script src="http://cdn.leafletjs.com/leaflet-0.7/leaflet.js" onerror="script_error()"></script>
-    <script src="https://rawgit.com/bbecquet/Leaflet.PolylineDecorator/master/src/L.Symbol.js" onerror="script_error()"></script>
-    <script src="https://rawgit.com/bbecquet/Leaflet.PolylineDecorator/master/src/L.PolylineDecorator.js" onerror="script_error()"></script>
-    <script src="https://rawgit.com/bbecquet/Leaflet.PolylineDecorator/master/src/L.LineUtil.PolylineDecorator.js" onerror="script_error()"></script>
+    <!--script src="http://leaflet.github.io/Leaflet.draw/leaflet.draw.js" onerror="script_error()"></script-->
     <link rel="stylesheet" href="main.css" />
   </head>
   <body>
     <div id="map"></div>
     <ul id="tools">
-      <li class="first selected" id="select">
+      <li class="selected" id="select">
         <button
           style="background-image: url('img/pointer.png')"
           onClick="select('select')"
           title="Select points"
         />
       </li>
-      <li id="points">
+      <li id="point">
         <button
-          style="background-image: url('img/p2p.png')"
-          onClick="select('points')"
-          title="Set points one by one"
+          style="background-image: url('img/point.png')"
+          onClick="select('point')"
+          title="Set point"
         />
       </li>
       <li id="spray">
@@ -39,10 +37,17 @@
           title="Set points around click position"
         />
       </li>
-      <li id="random">
+      <li id="poly">
         <button
-          style="background-image: url('img/uniform.png')"
-          onClick="select('random')"
+          style="background-image: url('img/polygon.png')"
+          onClick="select('poly')"
+          title="Set points in a bounding box of a map on screen"
+        />
+      </li>
+      <li id="bb">
+        <button
+          style="background-image: url('img/bb.png')"
+          onClick="select('bb')"
           title="Set points in a bounding box of a map on screen"
         />
       </li>
@@ -53,12 +58,18 @@
           title="Delete couple of points with same userid"
         />
       </li>
-      <li class="last save">
+      <li id="save">
         <button
           style="background-image: url('img/save.png')"
           onClick="save()"
           title="Save points"
-          disabled
+        />
+      </li>
+      <li class="last">
+        <button
+          style="background-image: url('img/undo.png')"
+          onClick="undo()"
+          title="Undo last step"
         />
       </li>
     </ul>

@@ -20,7 +20,7 @@
         <button
           style="background-image: url('img/pointer.png')"
           onClick="select('select')"
-          title="Select points"
+          title="Move points"
         />
       </li>
       <li id="point">
@@ -41,7 +41,8 @@
         <button
           style="background-image: url('img/polygon.png')"
           onClick="select('poly')"
-          title="Set points in a bounding box of a map on screen"
+          title="Set points in a bounding box of a polygon"
+          disabled
         />
       </li>
       <li id="bb">
@@ -55,14 +56,14 @@
         <button
           style="background-image: url('img/delete.png')"
           onClick="select('delete')"
-          title="Delete couple of points with same userid"
+          title="Delete points"
         />
       </li>
       <li id="save">
         <button
           style="background-image: url('img/save.png')"
           onClick="save()"
-          title="Save points"
+          title="Save points data"
         />
       </li>
       <li class="last">

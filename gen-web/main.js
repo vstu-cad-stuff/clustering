@@ -425,7 +425,23 @@ function select(option) {
 
 // save function
 function save() {
-  /* here will be save function */
+  // variable for text
+  var text = '';
+
+  for (i = 0; i < points.length; i++) {
+    var el = points[i];      
+    for (j = 0; j < el.length; j++) {
+      text += el[j].toFixed(6);
+      if (j < el.length - 1)
+        text += ', ';
+    }
+    text += '\n';
+  }
+
+  var a = document.createElement('a');
+  a.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+  a.setAttribute('download', 'data.txt');
+  a.click();
 }
 
 // undo function

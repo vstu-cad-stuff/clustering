@@ -1,6 +1,5 @@
 html {
   width: 100%;
-  height: 100%;
 }
 
 body {
@@ -9,7 +8,6 @@ body {
   font-family: 'PT Sans', serif;
   background: #fff;
   width: 800px;
-  height: 100%;
 }
 
 #path {
@@ -40,7 +38,7 @@ body {
 }
 
 #logo:hover {
-	opacity: 0.5;
+  opacity: 0.5;
 }
 
 #path .separator {

@@ -73,8 +73,6 @@ L.Marker = L.Marker.extend({
 var map = L.map('map', {closePopupOnClick: false}).
   setView([48.7819, 44.7777], 14);
 L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png').addTo(map);
-// binding function 'onClick' with map click event
-map.on('click', onClick);
 
 /* array for couples of points. Structure of an element:
    [userID, first_lat, first_lng, second_lat, second_lng] */
@@ -441,7 +439,9 @@ function save() {
   var a = document.createElement('a');
   a.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
   a.setAttribute('download', 'data.txt');
+  document.body.appendChild(a);
   a.click();
+  document.body.removeChild(a);
 }
 
 // undo function
@@ -524,7 +524,7 @@ function undo() {
 }
 /* ---------- ------- --------- ---------- */ }
 
-/* ---------- other functions ---------- */ {
+/* ---------- other ---------- */ {
 
 function get_userid() {
   // increment global uid
@@ -535,4 +535,7 @@ function get_userid() {
   // return userID
   return '#' + ('000000' + uid.toString(16)).slice(-6);
 }
-/* ---------- ----- --------- ---------- */ }
+
+// binding function 'onClick' with map click event
+map.on('click', onClick);
+/* ---------- ----- ---------- */ }

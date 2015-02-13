@@ -426,21 +426,33 @@ function save() {
   // variable for text
   var text = '';
 
+  // for each point
   for (i = 0; i < points.length; i++) {
+    // variable for coordinates
     var el = points[i];      
+    // for each coordinate
     for (j = 0; j < el.length; j++) {
+      // write it to 'text'
       text += el[j].toFixed(6);
+      // write comma if it's not last element
       if (j < el.length - 1)
         text += ', ';
     }
+    // line break
     text += '\n';
   }
 
+  // creating an 'a' element for downloading
   var a = document.createElement('a');
+  // setting 'text' to href
   a.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+  // setting link to download, not to navigate; setting name of file
   a.setAttribute('download', 'data.txt');
+  // adding to body (need this for firefox)
   document.body.appendChild(a);
+  // clicking
   a.click();
+  // removing from body
   document.body.removeChild(a);
 }
 

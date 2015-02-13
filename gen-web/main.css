@@ -16,31 +16,70 @@ body {
 
 /* toolbox */
 
+#tools, #poly_sub {
+  list-style: none;
+  background-color: #fff;
+  margin: 0;
+  padding: 0;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, .65);
+  text-align: center;
+  overflow: hidden;
+  font-size: 0;
+  position: absolute;
+}
+
 #tools {
-  float: left;
   width: 26px;
   left: 10px;
   top: 70px;
-  position: absolute;
-  z-index: 1;
-  list-style: none;
-  background-color: #fff;
+  z-index: 3;
   border-radius: 5px;
-  box-shadow: 0 1px 5px rgba(0, 0, 0, .65);
-  margin: 0;
-  padding: 0;
-  text-align: center;
-  overflow: hidden;
-  font-size:0;
 }
 
-#tools li{
+#poly_sub {
+  height: 26px;
+  left: 37px;
+  top: 151px;
+  z-index: 1;
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
+  visibility: hidden;
+}
+
+#tools li, #poly_sub li{
   display: inline-block;
   opacity: .5;
   width: 26px;
   padding: 5px 0px;
   margin: 0;
+}
+
+#tools li {
   border-bottom: 1px solid #999;
+}
+
+#poly_sub li{
+  border-right: 1px solid #999;
+}
+
+#tools li:hover, #poly_sub li:hover {
+  opacity: 1;
+}
+
+#tools li:hover {
+  border-bottom: 1px solid #ccc;
+}
+
+#poly_sub li:hover {
+  border-right: 1px solid #ccc;
+}
+
+#tools li.last, #poly_sub li.last {
+  border: 0;
+}
+
+#tools li.last:hover, #poly_sub li.last:hover {
+  border: 0;
 }
 
 #tools li.selected {
@@ -48,16 +87,7 @@ body {
   border-bottom: 1px solid #ccc;
 }
 
-#tools li:hover {
-  opacity: 1;
-  border-bottom: 1px solid #ccc;
-}
-
-#tools li.last {
-  border: 0;
-}
-
-#tools li button {
+#tools li button, #poly_sub li button {
   border: none;
   padding: none;
   height: 16px;

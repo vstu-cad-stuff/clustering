@@ -66,11 +66,27 @@
           title="Save points data"
         />
       </li>
-      <li class="last">
+      <li class="last" id="undo">
         <button
           style="background-image: url('img/undo.png')"
           onClick="undo()"
           title="Undo last step"
+        />
+      </li>
+    </ul>
+    <ul id="poly_sub">
+      <li id="poly_sub_cancel">
+        <button
+          style="background-image: url('img/cancel.png')"
+          onClick="poly_cancel()"
+          disabled
+        />
+      </li>
+      <li class="last" id="poly_sub_ready">
+        <button
+          style="background-image: url('img/ready.png')"
+          onClick="poly_ready()"
+          disabled
         />
       </li>
     </ul>

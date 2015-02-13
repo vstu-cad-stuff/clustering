@@ -38,7 +38,7 @@ var origin = L.icon({
 });
 
 // icon for destination point
-var origin = L.icon({
+var destination = L.icon({
   iconUrl: 'img/destination.png',
   shadowUrl: 'img/shadow.png',
   
@@ -352,6 +352,7 @@ function select(option) {
     case 'select':
       { // html changing
         document.getElementById('input').style.visibility = 'hidden';
+        document.getElementById('poly_sub').style.visibility = 'hidden';
         document.getElementById('select').className = 'selected';
         document.getElementById('point').className = '';
         document.getElementById('spray').className = '';
@@ -363,6 +364,7 @@ function select(option) {
     case 'point':
       { // html changing
         document.getElementById('input').style.visibility = 'hidden';
+        document.getElementById('poly_sub').style.visibility = 'hidden';
         document.getElementById('select').className = '';
         document.getElementById('point').className = 'selected';
         document.getElementById('spray').className = '';
@@ -374,6 +376,7 @@ function select(option) {
     case 'spray':
       { // html changing
         document.getElementById('input').style.visibility = 'visible';
+        document.getElementById('poly_sub').style.visibility = 'hidden';
         document.getElementById('count').value = count;
         document.getElementById('select').className = '';
         document.getElementById('point').className = '';
@@ -386,6 +389,7 @@ function select(option) {
     case 'poly':
       { // html changing
         document.getElementById('input').style.visibility = 'visible';
+        document.getElementById('poly_sub').style.visibility = 'visible';
         document.getElementById('count').value = count;
         document.getElementById('select').className = '';
         document.getElementById('point').className = '';
@@ -398,6 +402,7 @@ function select(option) {
     case 'bb':
       { // html changing
         document.getElementById('input').style.visibility = 'visible';
+        document.getElementById('poly_sub').style.visibility = 'hidden';
         document.getElementById('count').value = count;
         document.getElementById('select').className = '';
         document.getElementById('point').className = '';
@@ -410,6 +415,7 @@ function select(option) {
     case 'delete':
       { // html changing
         document.getElementById('input').style.visibility = 'hidden';
+        document.getElementById('poly_sub').style.visibility = 'hidden';
         document.getElementById('select').className = '';
         document.getElementById('point').className = '';
         document.getElementById('spray').className = '';
@@ -530,6 +536,8 @@ function undo() {
         // adding point to layer
         layers[layer_index].addLayer(point);
       }
+      break; }
+    case 'poly_vertex': {
       break; }
   }
   return true;

@@ -10,8 +10,11 @@
     <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7/leaflet.css" />
     <link href='http://fonts.googleapis.com/css?family=PT+Sans:400,700' rel='stylesheet' type='text/css'>
     <script src="http://cdn.leafletjs.com/leaflet-0.7/leaflet.js" onerror="script_error()"></script>
+    <script src="https://rawgit.com/aratcliffe/Leaflet.contextmenu/master/dist/leaflet.contextmenu.js" onerror="script_error()"></script>
+    <link onerror="script_error()" rel="stylesheet" href="https://rawgit.com/aratcliffe/Leaflet.contextmenu/master/dist/leaflet.contextmenu.css" />
     <!--script src="http://leaflet.github.io/Leaflet.draw/leaflet.draw.js" onerror="script_error()"></script-->
-    <link rel="stylesheet" href="main.css" />
+    <link rel="stylesheet" href="../main.css" />
+    <link rel="stylesheet" href="style.css" />
   </head>
   <body>
     <div id="map"></div>
@@ -90,6 +93,9 @@
         />
       </li>
     </ul>
+    <div id="spray_radius">
+      <input id="input_radius" type="range" min="0.005" max="0.02" value="0.01" step="0.001" />
+    </div>
     <div id="input">
       Point's count: <br />
       <input type="input" id="count" />

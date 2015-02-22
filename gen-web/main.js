@@ -98,13 +98,8 @@ function change_to(type, L_id) {
   // get options layer and point from marker
   var layer = marker.options.layer;
   var point = marker.options.point;
-  /* some strange way to get previous state of marker:
-     get name of it's icon, then cut 'img/' in beginning
-     and '.png' at the end. If name is 'icon' then it was
-     default marker */
-  var prev_type = marker.options.icon.options.iconUrl.slice(4, -4);
-  if (prev_type == 'icon')
-    prev_type = 'default';
+  // get previous state of marker
+  var prev_type = get_type(marker);
   // remove marker from layer
   layers[layer].removeLayer(marker);
   // remove marker from map
@@ -665,8 +660,22 @@ function onMarkerDragEnd(e) {
   last_actions.push(['move', points[marker.options.point], marker._leaflet_id]);
   // changing data in array
   points[marker.options.point] = [lat, lng];
+  var type = get_type(marker);
+  
   // binding new popup
-  marker.bindPopup(lat.toFixed(5) + '; ' + lng.toFixed(5));
+  switch (type) {
+    case 'default': {
+      marker.bindPopup(lat.toFixed(5) + '; ' + lng.toFixed(5));
+    break; }
+    case 'origin': {
+      marker.bindPopup('<b>origin</b><br/>' +
+        lat.toFixed(5) + '; ' + lng.toFixed(5));
+    break; }
+    case 'destination': {
+      marker.bindPopup('<b>destination</b><br/>' +
+        lat.toFixed(5) + '; ' + lng.toFixed(5));
+    break; }
+  }
 }
 /* ---------- ----- -------- ---------- */ }
 
@@ -935,6 +944,17 @@ function get_userid() {
   return '#' + ('000000' + uid.toString(16)).slice(-6);
 }
 
+function get_type(marker) {
+  /* some strange way to get state of marker:
+     get name of it's icon, then cut 'img/' in beginning
+     and '.png' at the end. If name is 'icon' then it is
+     a default marker */
+  var m_type = marker.options.icon.options.iconUrl.slice(4, -4);
+  if (m_type == 'icon')
+    m_type = 'default';
+  return m_type;
+}
+    
 // binding function 'onClick' with map click event
 map.on('click', onClick);
 /* ---------- ----- ---------- */ }

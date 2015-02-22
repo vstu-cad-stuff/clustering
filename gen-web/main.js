@@ -26,13 +26,15 @@ var layers = [];
 
 // current mode of work. Initial - 'select' mode
 var work_mode = 'select';
+// current type of point. Initial - 'default'
+var point_type = 'default';
 // points count, need for spray and uniform modes
 var count = 20;
 // uid - global variable for counting users, userid - string hex uid
 var uid = -1, userid;
 // array of last actions
 var last_actions = [];
-//
+// _leaflet_id of clicked marker
 var clicked;
 /* ---------- ------------ --- --------- ---------- */ }
 
@@ -150,6 +152,28 @@ function change_to(type, L_id) {
   return prev_type;
 }
 
+function delete_marker(L_id) {
+  var marker = map._layers[L_id];
+  // get layer it contained
+  var layer = marker.options.layer;
+  // variable for last_actions array
+  var temp = ['delete', [marker]];
+  // remove marker from layer
+  layers[layer].removeLayer(marker);
+  // getting layer._layers properties
+  var props = Object.getOwnPropertyNames(layers[layer]._layers);
+  // if layer._layers does not have any properties
+  if (!props.length) {
+    // if we delete layer, add it to last_actions item
+    temp[1].unshift(layers[layer]);
+    // remove layer from the map
+    map.removeLayer(layers[layer]);
+    // and the 'layers' array
+    delete layers[layer];
+  }
+  return temp;
+}
+
 function set_as_origin() {
   // get prev_type and change 'clicked' marker to origin
   var prev_type = change_to('origin', clicked);
@@ -168,25 +192,7 @@ function set_as_default() {
 }
 
 function delete_point() {
-  // get clicked marker
-  var marker = map._layers[clicked]; /* create delete(marker) function, DRY */
-  // get layer it contained
-  var layer = marker.options.layer;
-  // variable for last_actions array
-  var temp = ['delete', [marker]];
-  // remove marker from layer
-  layers[layer].removeLayer(marker);
-  // getting layer._layers properties
-  var props = Object.getOwnPropertyNames(layers[layer]._layers);
-  // if layer._layers does not have any properties
-  if (!props.length) {
-    // if we delete layer, add it to last_actions item
-    temp[1].unshift(layers[layer]);
-    // remove layer from the map
-    map.removeLayer(layers[layer]);
-    // and the 'layers' array
-    delete layers[layer];
-  }
+  var temp = delete_marker(clicked);
   last_actions.push(temp);
 }
 /* ---------- ------- ---- --------- ---------- */ }
@@ -306,14 +312,41 @@ function onClick(e) {
       layers.push(new L.FeatureGroup());
       // writing point to 'points' array
       points.push([lat, lng]);
-      // creating origin Marker
-      marker = L.marker([lat, lng], {
-        draggable: 'true',
-        // layer's index in 'layers' array
-        layer: layers.length - 1,
-        // point's index in 'points' array
-        point: points.length - 1
-      }).addTo(map).bindPopup(lat.toFixed(5) + '; ' + lng.toFixed(5));
+      // creating marker
+      switch (point_type) {
+        case 'default': {
+          marker = L.marker([lat, lng], {
+            draggable: 'true',
+            // layer's index in 'layers' array
+            layer: layers.length - 1,
+            // point's index in 'points' array
+            point: points.length - 1
+          }).addTo(map).
+            bindPopup(lat.toFixed(5) + '; ' + lng.toFixed(5));
+          break; }
+        case 'origin': {
+          marker = L.origin([lat, lng], {
+            draggable: 'true',
+            // layer's index in 'layers' array
+            layer: layers.length - 1,
+            // point's index in 'points' array
+            point: points.length - 1
+          }).addTo(map).
+            bindPopup('<b>origin</b><br/>' +
+              lat.toFixed(5) + '; ' + lng.toFixed(5));
+          break; }
+        case 'destination': {
+          marker = L.destination([lat, lng], {
+            draggable: 'true',
+            // layer's index in 'layers' array
+            layer: layers.length - 1,
+            // point's index in 'points' array
+            point: points.length - 1
+          }).addTo(map).
+            bindPopup('<b>destination</b><br/>' +
+              lat.toFixed(5) + '; ' + lng.toFixed(5));
+          break; }
+      }
       // add event listeners to marker
       marker.on('click', onMarkerClick);
       marker.on('dragstart', onMarkerDragStart);
@@ -365,12 +398,40 @@ function onClick(e) {
         // writing point to 'points' array
         points.push([nlat, nlng]);
         // creating marker
-        var marker = L.marker([nlat, nlng], {
-          // layer's index in 'layers' array
-          layer: layers.length - 1,
-          // point's index in 'points' array
-          point: points.length - 1
-        }).addTo(map).bindPopup(lat.toFixed(5) + '; ' + lng.toFixed(5));
+        switch (point_type) {
+          case 'default': {
+            marker = L.marker([nlat, nlng], {
+              draggable: 'true',
+              // layer's index in 'layers' array
+              layer: layers.length - 1,
+              // point's index in 'points' array
+              point: points.length - 1
+            }).addTo(map).
+              bindPopup(nlat.toFixed(5) + '; ' + nlng.toFixed(5));
+            break; }
+          case 'origin': {
+            marker = L.origin([nlat, nlng], {
+              draggable: 'true',
+              // layer's index in 'layers' array
+              layer: layers.length - 1,
+              // point's index in 'points' array
+              point: points.length - 1
+            }).addTo(map).
+              bindPopup('<b>origin</b><br/>' +
+                nlat.toFixed(5) + '; ' + nlng.toFixed(5));
+            break; }
+          case 'destination': {
+            marker = L.destination([nlat, nlng], {
+              draggable: 'true',
+              // layer's index in 'layers' array
+              layer: layers.length - 1,
+              // point's index in 'points' array
+              point: points.length - 1
+            }).addTo(map).
+              bindPopup('<b>destination</b><br/>' +
+                nlat.toFixed(5) + '; ' + nlng.toFixed(5));
+            break; }
+        }
         // adding click function to markers
         marker.on('click', onMarkerClick);
         marker.on('dragstart', onMarkerDragStart);
@@ -421,13 +482,40 @@ function onClick(e) {
         // writing point to 'points' array
         points.push([nlat, nlng]);
         // creating marker
-        marker = L.marker([nlat, nlng], {
-          draggable: 'true',
-          // layer's index in 'layers' array
-          layer: layers.length - 1,
-          // point's index in 'points' array
-          point: points.length - 1
-        }).addTo(map).bindPopup(lat.toFixed(5) + '; ' + lng.toFixed(5));
+        switch (point_type) {
+          case 'default': {
+            marker = L.marker([nlat, nlng], {
+              draggable: 'true',
+              // layer's index in 'layers' array
+              layer: layers.length - 1,
+              // point's index in 'points' array
+              point: points.length - 1
+            }).addTo(map).
+              bindPopup(nlat.toFixed(5) + '; ' + nlng.toFixed(5));
+            break; }
+          case 'origin': {
+            marker = L.origin([nlat, nlng], {
+              draggable: 'true',
+              // layer's index in 'layers' array
+              layer: layers.length - 1,
+              // point's index in 'points' array
+              point: points.length - 1
+            }).addTo(map).
+              bindPopup('<b>origin</b><br/>' +
+                nlat.toFixed(5) + '; ' + nlng.toFixed(5));
+            break; }
+          case 'destination': {
+            marker = L.destination([nlat, nlng], {
+              draggable: 'true',
+              // layer's index in 'layers' array
+              layer: layers.length - 1,
+              // point's index in 'points' array
+              point: points.length - 1
+            }).addTo(map).
+              bindPopup('<b>destination</b><br/>' +
+                nlat.toFixed(5) + '; ' + nlng.toFixed(5));
+            break; }
+        }
         // adding click function to markers
         marker.on('click', onMarkerClick);
         marker.on('dragstart', onMarkerDragStart);
@@ -478,13 +566,40 @@ function onClick(e) {
         // writing point to 'points' array
         points.push([nlat, nlng]);
         // creating marker
-        marker = L.marker([nlat, nlng], {
-          draggable: 'true',
-          // layer's index in 'layers' array
-          layer: layers.length - 1,
-          // point's index in 'points' array
-          point: points.length - 1
-        }).addTo(map).bindPopup(lat.toFixed(5) + '; ' + lng.toFixed(5));
+        switch (point_type) {
+          case 'default': {
+            marker = L.marker([nlat, nlng], {
+              draggable: 'true',
+              // layer's index in 'layers' array
+              layer: layers.length - 1,
+              // point's index in 'points' array
+              point: points.length - 1
+            }).addTo(map).
+              bindPopup(nlat.toFixed(5) + '; ' + nlng.toFixed(5));
+            break; }
+          case 'origin': {
+            marker = L.origin([nlat, nlng], {
+              draggable: 'true',
+              // layer's index in 'layers' array
+              layer: layers.length - 1,
+              // point's index in 'points' array
+              point: points.length - 1
+            }).addTo(map).
+            bindPopup('<b>origin</b><br/>' +
+              nlat.toFixed(5) + '; ' + nlng.toFixed(5));
+            break; }
+          case 'destination': {
+            marker = L.destination([nlat, nlng], {
+              draggable: 'true',
+              // layer's index in 'layers' array
+              layer: layers.length - 1,
+              // point's index in 'points' array
+              point: points.length - 1
+            }).addTo(map).
+              bindPopup('<b>destination</b><br/>' +
+                nlat.toFixed(5) + '; ' + nlng.toFixed(5));
+            break; }
+        }
         // adding click function to markers
         marker.on('click', onMarkerClick);
         marker.on('dragstart', onMarkerDragStart);
@@ -520,23 +635,8 @@ function onMarkerClick(e) {
       /* in 'delete' mode we delete marker
          and layer contained it, if it has no more markers */
       map.contextmenu.hide();
-      var marker = e.target;
-      var layer = marker.options.layer;
-      // variable for last_actions array
-      var temp = ['delete', [marker]];
-      // remove marker from layer
-      layers[layer].removeLayer(marker);
-      // getting layer._layers properties
-      var props = Object.getOwnPropertyNames(layers[layer]._layers);
-      // if layer._layers does not have any properties
-      if (!props.length) {
-        // if we delete layer, add it to last_actions item
-        temp[1].unshift(layers[layer]);
-        // remove layer from the map
-        map.removeLayer(layers[layer]);
-        // and the 'layers' array
-        delete layers[layer];
-      }
+      var l_id = e.target._leaflet_id;
+      var temp = delete_marker(l_id);
       last_actions.push(temp);
       break; }
   }
@@ -578,87 +678,119 @@ function select(option) {
   work_mode = option;
   // doing stuff depending on work mode
   switch (work_mode) {
-    case 'select':
-      { // html changing
-        document.getElementById('input').style.visibility = 'hidden';
-        document.getElementById('poly_sub').style.visibility = 'hidden';
-        document.getElementById('spray_radius').style.visibility = 'hidden';
-        document.getElementById('select').className = 'selected';
-        document.getElementById('point').className = '';
-        document.getElementById('spray').className = '';
-        document.getElementById('poly').className = '';
-        document.getElementById('bb').className = '';
-        document.getElementById('delete').className = '';
-      }
-      break;
-    case 'point':
-      { // html changing
-        document.getElementById('input').style.visibility = 'hidden';
-        document.getElementById('poly_sub').style.visibility = 'hidden';
-        document.getElementById('spray_radius').style.visibility = 'hidden';
-        document.getElementById('select').className = '';
-        document.getElementById('point').className = 'selected';
-        document.getElementById('spray').className = '';
-        document.getElementById('poly').className = '';
-        document.getElementById('bb').className = '';
-        document.getElementById('delete').className = '';
-      }
-      break;
-    case 'spray':
-      { // html changing
-        document.getElementById('input').style.visibility = 'visible';
-        document.getElementById('poly_sub').style.visibility = 'hidden';
-        document.getElementById('spray_radius').style.visibility = 'visible';
-        document.getElementById('count').value = count;
-        document.getElementById('select').className = '';
-        document.getElementById('point').className = '';
-        document.getElementById('spray').className = 'selected';
-        document.getElementById('poly').className = '';
-        document.getElementById('bb').className = '';
-        document.getElementById('delete').className = '';
-      }
-      break;
-    case 'poly':
-      { // html changing
-        document.getElementById('input').style.visibility = 'visible';
-        document.getElementById('poly_sub').style.visibility = 'visible';
-        document.getElementById('spray_radius').style.visibility = 'hidden';
-        document.getElementById('count').value = count;
-        document.getElementById('select').className = '';
-        document.getElementById('point').className = '';
-        document.getElementById('spray').className = '';
-        document.getElementById('poly').className = 'selected';
-        document.getElementById('bb').className = '';
-        document.getElementById('delete').className = '';
-      }
-      break;
-    case 'bb':
-      { // html changing
-        document.getElementById('input').style.visibility = 'visible';
-        document.getElementById('poly_sub').style.visibility = 'hidden';
-        document.getElementById('spray_radius').style.visibility = 'hidden';
-        document.getElementById('count').value = count;
-        document.getElementById('select').className = '';
-        document.getElementById('point').className = '';
-        document.getElementById('spray').className = '';
-        document.getElementById('poly').className = '';
-        document.getElementById('bb').className = 'selected';
-        document.getElementById('delete').className = '';
-      }
-      break;
-    case 'delete':
-      { // html changing
-        document.getElementById('input').style.visibility = 'hidden';
-        document.getElementById('poly_sub').style.visibility = 'hidden';
-        document.getElementById('spray_radius').style.visibility = 'hidden';
-        document.getElementById('select').className = '';
-        document.getElementById('point').className = '';
-        document.getElementById('spray').className = '';
-        document.getElementById('poly').className = '';
-        document.getElementById('bb').className = '';
-        document.getElementById('delete').className = 'selected';
-      }
-      break;
+    case 'select': {
+      // hide input panel
+      document.getElementById('input').style.visibility = 'hidden';
+      // hide polygon submenu
+      document.getElementById('poly_sub').style.visibility = 'hidden';
+      // hide spray radius changer
+      document.getElementById('spray_radius').style.visibility = 'hidden';
+      // hide point's type selection menu
+      document.getElementById('select_type').style.visibility = 'hidden';
+      // select 'select' element
+      document.getElementById('select').className = 'selected';
+      document.getElementById('point').className = '';
+      document.getElementById('spray').className = '';
+      document.getElementById('poly').className = '';
+      document.getElementById('bb').className = '';
+      document.getElementById('delete').className = '';
+      break; }
+    case 'point': {
+      document.getElementById('input').style.visibility = 'hidden';
+      document.getElementById('poly_sub').style.visibility = 'hidden';
+      document.getElementById('spray_radius').style.visibility = 'hidden';
+      // show point's type selection menu
+      document.getElementById('select_type').style.visibility = 'visible';
+      // select 'point' element
+      document.getElementById('select').className = '';
+      document.getElementById('point').className = 'selected';
+      document.getElementById('spray').className = '';
+      document.getElementById('poly').className = '';
+      document.getElementById('bb').className = '';
+      document.getElementById('delete').className = '';
+      break; }
+    case 'spray': {
+      // show input panel
+      document.getElementById('input').style.visibility = 'visible';
+      document.getElementById('poly_sub').style.visibility = 'hidden';
+      // show spray radius changer
+      document.getElementById('spray_radius').style.visibility = 'visible';
+      document.getElementById('select_type').style.visibility = 'visible';
+      document.getElementById('count').value = count;
+      document.getElementById('select').className = '';
+      document.getElementById('point').className = '';
+      document.getElementById('spray').className = 'selected';
+      document.getElementById('poly').className = '';
+      document.getElementById('bb').className = '';
+      document.getElementById('delete').className = '';
+      break; }
+    case 'poly': {
+      document.getElementById('input').style.visibility = 'visible';
+      // show polygon submenu
+      document.getElementById('poly_sub').style.visibility = 'visible';
+      document.getElementById('spray_radius').style.visibility = 'hidden';
+      document.getElementById('select_type').style.visibility = 'visible';
+      document.getElementById('count').value = count;
+      document.getElementById('select').className = '';
+      document.getElementById('point').className = '';
+      document.getElementById('spray').className = '';
+      document.getElementById('poly').className = 'selected';
+      document.getElementById('bb').className = '';
+      document.getElementById('delete').className = '';
+      break; }
+    case 'bb': {
+      document.getElementById('input').style.visibility = 'visible';
+      document.getElementById('poly_sub').style.visibility = 'hidden';
+      document.getElementById('spray_radius').style.visibility = 'hidden';
+      document.getElementById('select_type').style.visibility = 'visible';
+      document.getElementById('count').value = count;
+      document.getElementById('select').className = '';
+      document.getElementById('point').className = '';
+      document.getElementById('spray').className = '';
+      document.getElementById('poly').className = '';
+      document.getElementById('bb').className = 'selected';
+      document.getElementById('delete').className = '';
+      break; }
+    case 'delete': {
+      document.getElementById('input').style.visibility = 'hidden';
+      document.getElementById('poly_sub').style.visibility = 'hidden';
+      document.getElementById('spray_radius').style.visibility = 'hidden';
+      document.getElementById('select_type').style.visibility = 'hidden';
+      document.getElementById('select').className = '';
+      document.getElementById('point').className = '';
+      document.getElementById('spray').className = '';
+      document.getElementById('poly').className = '';
+      document.getElementById('bb').className = '';
+      document.getElementById('delete').className = 'selected';
+      break; }
+  }
+}
+
+// on point type selection
+function select_type(option) {
+  map.contextmenu.hide();
+  // changing point's type
+  point_type = option;
+  // doing stuff depending on work mode
+  switch (point_type) {
+    case 'default': {
+      // select 'default' type
+      document.getElementById('default').className = 'selected';
+      document.getElementById('origin').className = '';
+      document.getElementById('destination').className = 'last';
+      break; }
+    case 'origin': {
+      // select 'origin' type
+      document.getElementById('default').className = '';
+      document.getElementById('origin').className = 'selected';
+      document.getElementById('destination').className = 'last';
+      break; }
+    case 'destination': {
+      // select 'destination' type
+      document.getElementById('default').className = '';
+      document.getElementById('origin').className = '';
+      document.getElementById('destination').className = 'last selected';
+      break; }
   }
 }
 

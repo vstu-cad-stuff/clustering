@@ -45,7 +45,6 @@
           style="background-image: url('img/polygon.png')"
           onClick="select('poly')"
           title="Set points in a bounding box of a polygon"
-          disabled
         />
       </li>
       <li id="bb">
@@ -96,6 +95,29 @@
     <div id="spray_radius">
       <input id="input_radius" type="range" min="0.005" max="0.02" value="0.01" step="0.001" />
     </div>
+    <ul id="select_type">
+      <li class="selected" id="default">
+        <button
+          style="background-image: url('img/icon.png')"
+          onClick="select_type('default')"
+          title="Default points"
+        />
+      </li>
+      <li id="origin">
+        <button
+          style="background-image: url('img/origin.png')"
+          onClick="select_type('origin')"
+          title="Origin points"
+        />
+      </li>
+      <li class="last" id="destination">
+        <button
+          style="background-image: url('img/destination.png')"
+          onClick="select_type('destination')"
+          title="Destination points"
+        />
+      </li>
+    </ul>
     <div id="input">
       Point's count: <br />
       <input type="input" id="count" />

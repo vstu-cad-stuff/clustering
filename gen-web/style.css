@@ -1,6 +1,6 @@
 /* toolbox */
 
-#tools, #poly_sub {
+#tools, #poly_sub, #select_type {
   list-style: none;
   background-color: #fff;
   margin: 0;
@@ -12,15 +12,18 @@
   position: absolute;
 }
 
-#tools {
+#tools, #select_type  {
   width: 26px;
   left: 10px;
-  top: 70px;
   z-index: 3;
   border-radius: 5px;
 }
 
-#tools li, #poly_sub li{
+#tools {
+  top: 70px;
+}
+
+#tools li, #poly_sub li, #select_type li {
   display: inline-block;
   opacity: .5;
   width: 26px;
@@ -28,32 +31,32 @@
   margin: 0;
 }
 
-#tools li {
+#tools li, #select_type li {
   border-bottom: 1px solid #999;
 }
 
-#tools li:hover, #poly_sub li:hover {
+#tools li:hover, #poly_sub li:hover, #select_type li:hover {
   opacity: 1;
 }
 
-#tools li:hover {
+#tools li:hover, #select_type li:hover {
   border-bottom: 1px solid #ccc;
 }
 
-#tools li.last, #poly_sub li.last {
+#tools li.last, #poly_sub li.last, #select_type li.last {
   border: 0;
 }
 
-#tools li.last:hover, #poly_sub li.last:hover {
+#tools li.last:hover, #poly_sub li.last:hover, #select_type li.last:hover {
   border: 0;
 }
 
-#tools li.selected {
+#tools li.selected, #select_type li.selected {
   opacity: 1;
   border-bottom: 1px solid #ccc;
 }
 
-#tools li button, #poly_sub li button {
+#tools li button, #poly_sub li button, #select_type li button {
   border: none;
   padding: none;
   height: 16px;
@@ -80,6 +83,13 @@
 
 #poly_sub li:hover {
   border-right: 1px solid #ccc;
+}
+
+/* select type of points */
+
+#select_type {
+  top: 292px;
+  visibility: hidden;
 }
 
 /* spray area radius */

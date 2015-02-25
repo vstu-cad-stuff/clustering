@@ -68,6 +68,13 @@
           title="Save points data"
         />
       </li>
+      <li id="load">
+        <button
+          style="background-image: url('img/upload.png')"
+          onClick="load()"
+          title="Load points data"
+        />
+      </li>
       <li class="last" id="undo">
         <button
           style="background-image: url('img/undo.png')"
@@ -81,14 +88,12 @@
         <button
           style="background-image: url('img/cancel.png')"
           onClick="poly_cancel()"
-          disabled
         />
       </li>
       <li class="last" id="poly_sub_ready">
         <button
           style="background-image: url('img/ready.png')"
           onClick="poly_ready()"
-          disabled
         />
       </li>
     </ul>

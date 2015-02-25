@@ -36,6 +36,8 @@ var uid = -1, userid;
 var last_actions = [];
 // _leaflet_id of clicked marker
 var clicked;
+// 
+var poly_state = [false, []];
 /* ---------- ------------ --- --------- ---------- */ }
 
 /* ---------- marker icons ---------- */ {
@@ -87,6 +89,97 @@ var icon_handle = L.icon({
   popupAnchor:  [0, -5]
 });
 /* ---------- ------ ----- ---------- */ }
+
+/* ---------- other ---------- */ {
+
+function get_userid() {
+  // increment global uid
+  uid += 1;
+  // if userID == '#ffffff', then reset it to 0
+  if (uid == (1 << 24))
+    uid = 0;
+  // return userID
+  return '#' + ('000000' + uid.toString(16)).slice(-6);
+}
+
+function get_type(marker) {
+  /* some strange way to get state of marker:
+     get name of it's icon, then cut 'img/' in beginning
+     and '.png' at the end. If name is 'icon' then it is
+     a default marker */
+  var m_type = marker.options.icon.options.iconUrl.slice(4, -4);
+  if (m_type == 'icon')
+    m_type = 'default';
+  return m_type;
+}
+
+function draw_marker(type, latlng) {
+  // creating marker
+  switch (type) {
+    case 'default': {
+      var marker = L.marker(latlng, {
+        draggable: 'true',
+        // layer's index in 'layers' array
+        layer: layers.length - 1,
+        // point's index in 'points' array
+        point: points.length - 1
+      }).addTo(map).
+        bindPopup(latlng[0].toFixed(5) + '; ' + latlng[1].toFixed(5));
+      break; }
+    case 'origin': {
+      var marker = L.origin(latlng, {
+        draggable: 'true',
+        // layer's index in 'layers' array
+        layer: layers.length - 1,
+        // point's index in 'points' array
+        point: points.length - 1
+      }).addTo(map).
+        bindPopup('<b>origin</b><br/>' +
+          latlng[0].toFixed(5) + '; ' + latlng[1].toFixed(5));
+      break; }
+    case 'destination': {
+      var marker = L.destination(latlng, {
+        draggable: 'true',
+        // layer's index in 'layers' array
+        layer: layers.length - 1,
+        // point's index in 'points' array
+        point: points.length - 1
+      }).addTo(map).
+        bindPopup('<b>destination</b><br/>' +
+          latlng[0].toFixed(5) + '; ' + latlng[1].toFixed(5));
+      break; }
+    case 'handle': {
+      var marker = L.handle(latlng, {
+        draggable: 'true',
+        // layer's index in 'layers' array
+        layer: layers.length - 1
+      }).addTo(map);
+    }
+  }
+  // add event listeners to marker
+  marker.on('click', onMarkerClick);
+  marker.on('dragstart', onMarkerDragStart);
+  marker.on('dragend', onMarkerDragEnd);
+  if (type == 'handle') {
+    marker.on('contextmenu', function (e) {
+      if (work_mode != 'select' && work_mode != 'poly') {
+        map.contextmenu.hide();
+        return false;
+      }
+      clicked = e.target._leaflet_id;
+    })
+  } else {
+    marker.on('contextmenu', function (e) {
+      if (work_mode != 'select') {
+        map.contextmenu.hide();
+        return false;
+      }
+      clicked = e.target._leaflet_id;
+    })
+  }
+  return marker;
+}
+/* ---------- ----- ---------- */ }
 
 /* ---------- context menu functions ---------- */ {
 function change_to(type, L_id) {
@@ -280,6 +373,25 @@ L.Destination = L.Marker.extend({
 });
 
 L.destination = function (t, e) { return new L.Destination(t, e) };
+
+L.Handle = L.Marker.extend({
+   options: {
+      draggable: 'true',
+      layer: 0,
+      in: undefined,
+      out: undefined,
+      icon: icon_handle,
+      contextmenu: true,
+      contextmenuInheritItems: false,
+      contextmenuItems: [{
+        text: 'Delete point',
+        callback: delete_point,
+        icon: 'img/delete.png'
+      }]
+   }
+});
+
+L.handle = function (t, e) { return new L.Handle(t, e) };
 /* ---------- --------- ------- --------- ---------- */ }
 
 /* ---------- event handlers ---------- */ {
@@ -308,51 +420,7 @@ function onClick(e) {
       // writing point to 'points' array
       points.push([lat, lng]);
       // creating marker
-      switch (point_type) {
-        case 'default': {
-          marker = L.marker([lat, lng], {
-            draggable: 'true',
-            // layer's index in 'layers' array
-            layer: layers.length - 1,
-            // point's index in 'points' array
-            point: points.length - 1
-          }).addTo(map).
-            bindPopup(lat.toFixed(5) + '; ' + lng.toFixed(5));
-          break; }
-        case 'origin': {
-          marker = L.origin([lat, lng], {
-            draggable: 'true',
-            // layer's index in 'layers' array
-            layer: layers.length - 1,
-            // point's index in 'points' array
-            point: points.length - 1
-          }).addTo(map).
-            bindPopup('<b>origin</b><br/>' +
-              lat.toFixed(5) + '; ' + lng.toFixed(5));
-          break; }
-        case 'destination': {
-          marker = L.destination([lat, lng], {
-            draggable: 'true',
-            // layer's index in 'layers' array
-            layer: layers.length - 1,
-            // point's index in 'points' array
-            point: points.length - 1
-          }).addTo(map).
-            bindPopup('<b>destination</b><br/>' +
-              lat.toFixed(5) + '; ' + lng.toFixed(5));
-          break; }
-      }
-      // add event listeners to marker
-      marker.on('click', onMarkerClick);
-      marker.on('dragstart', onMarkerDragStart);
-      marker.on('dragend', onMarkerDragEnd);
-      marker.on('contextmenu', function (e) {
-        if (work_mode != 'select') {
-          map.contextmenu.hide();
-          return false;
-        }
-        clicked = e.target._leaflet_id;
-      });
+      var marker = draw_marker(point_type, [lat, lng]);
       // add marker to layer
       layers[layers.length - 1].addLayer(marker);
       last_actions.push(['add', layers.length - 1]);
@@ -393,51 +461,7 @@ function onClick(e) {
         // writing point to 'points' array
         points.push([nlat, nlng]);
         // creating marker
-        switch (point_type) {
-          case 'default': {
-            marker = L.marker([nlat, nlng], {
-              draggable: 'true',
-              // layer's index in 'layers' array
-              layer: layers.length - 1,
-              // point's index in 'points' array
-              point: points.length - 1
-            }).addTo(map).
-              bindPopup(nlat.toFixed(5) + '; ' + nlng.toFixed(5));
-            break; }
-          case 'origin': {
-            marker = L.origin([nlat, nlng], {
-              draggable: 'true',
-              // layer's index in 'layers' array
-              layer: layers.length - 1,
-              // point's index in 'points' array
-              point: points.length - 1
-            }).addTo(map).
-              bindPopup('<b>origin</b><br/>' +
-                nlat.toFixed(5) + '; ' + nlng.toFixed(5));
-            break; }
-          case 'destination': {
-            marker = L.destination([nlat, nlng], {
-              draggable: 'true',
-              // layer's index in 'layers' array
-              layer: layers.length - 1,
-              // point's index in 'points' array
-              point: points.length - 1
-            }).addTo(map).
-              bindPopup('<b>destination</b><br/>' +
-                nlat.toFixed(5) + '; ' + nlng.toFixed(5));
-            break; }
-        }
-        // adding click function to markers
-        marker.on('click', onMarkerClick);
-        marker.on('dragstart', onMarkerDragStart);
-        marker.on('dragend', onMarkerDragEnd);
-        marker.on('contextmenu', function (e) {
-          if (work_mode != 'select') {
-            map.contextmenu.hide();
-            return false;
-          }
-          clicked = e.target._leaflet_id
-        });
+        var marker = draw_marker(point_type, [nlat, nlng]);
         // adding markers to layer
         layers[layers.length - 1].addLayer(marker);
       }
@@ -455,9 +479,6 @@ function onClick(e) {
       // if wrong number set it to default
       if (isNaN(count) || count <= 0)
         count = 20;
-      // if number is odd we'll increment it
-      if (count % 2)
-        count += 1;
       // showing number
       document.getElementById('count').value = count;
       
@@ -477,51 +498,7 @@ function onClick(e) {
         // writing point to 'points' array
         points.push([nlat, nlng]);
         // creating marker
-        switch (point_type) {
-          case 'default': {
-            marker = L.marker([nlat, nlng], {
-              draggable: 'true',
-              // layer's index in 'layers' array
-              layer: layers.length - 1,
-              // point's index in 'points' array
-              point: points.length - 1
-            }).addTo(map).
-              bindPopup(nlat.toFixed(5) + '; ' + nlng.toFixed(5));
-            break; }
-          case 'origin': {
-            marker = L.origin([nlat, nlng], {
-              draggable: 'true',
-              // layer's index in 'layers' array
-              layer: layers.length - 1,
-              // point's index in 'points' array
-              point: points.length - 1
-            }).addTo(map).
-              bindPopup('<b>origin</b><br/>' +
-                nlat.toFixed(5) + '; ' + nlng.toFixed(5));
-            break; }
-          case 'destination': {
-            marker = L.destination([nlat, nlng], {
-              draggable: 'true',
-              // layer's index in 'layers' array
-              layer: layers.length - 1,
-              // point's index in 'points' array
-              point: points.length - 1
-            }).addTo(map).
-              bindPopup('<b>destination</b><br/>' +
-                nlat.toFixed(5) + '; ' + nlng.toFixed(5));
-            break; }
-        }
-        // adding click function to markers
-        marker.on('click', onMarkerClick);
-        marker.on('dragstart', onMarkerDragStart);
-        marker.on('dragend', onMarkerDragEnd);
-        marker.on('contextmenu', function (e) {
-          if (work_mode != 'select') {
-            map.contextmenu.hide();
-            return false;
-          }
-          clicked = e.target._leaflet_id
-        });
+        var marker = draw_marker(point_type, [nlat, nlng]);
         // adding markers to layer
         layers[layers.length - 1].addLayer(marker);
       }
@@ -534,84 +511,33 @@ function onClick(e) {
       /* if clicking on map in 'polygon' mode
          we should set vertex of polygon. Then, by clicking
          special button we fill it by 'count' points */
-      // parsing input for number
-      count = parseInt(document.getElementById('count').value);
-      // if wrong number set it to default
-      if (isNaN(count) || count <= 0)
-        count = 20;
-      // if number is odd we'll increment it
-      if (count % 2)
-        count += 1;
-      // showing number
-      document.getElementById('count').value = count;
-      
-      // getting map bounds on screen
-      bounds = [
-        map.getBounds()._southWest.lat,  // min latitude
-        map.getBounds()._northEast.lat,  // max latitude
-        map.getBounds()._southWest.lng,  // min longitude
-        map.getBounds()._northEast.lng]; // max longitude
-        
-      // create new layer
-      layers.push(new L.FeatureGroup());
-      for (i = 0; i < count; i++) {
-        // generate random coordinates
-        nlat = bounds[0] + Math.random() * (bounds[1] - bounds[0]);
-        nlng = bounds[2] + Math.random() * (bounds[3] - bounds[2]);
-        // writing point to 'points' array
-        points.push([nlat, nlng]);
-        // creating marker
-        switch (point_type) {
-          case 'default': {
-            marker = L.marker([nlat, nlng], {
-              draggable: 'true',
-              // layer's index in 'layers' array
-              layer: layers.length - 1,
-              // point's index in 'points' array
-              point: points.length - 1
-            }).addTo(map).
-              bindPopup(nlat.toFixed(5) + '; ' + nlng.toFixed(5));
-            break; }
-          case 'origin': {
-            marker = L.origin([nlat, nlng], {
-              draggable: 'true',
-              // layer's index in 'layers' array
-              layer: layers.length - 1,
-              // point's index in 'points' array
-              point: points.length - 1
-            }).addTo(map).
-            bindPopup('<b>origin</b><br/>' +
-              nlat.toFixed(5) + '; ' + nlng.toFixed(5));
-            break; }
-          case 'destination': {
-            marker = L.destination([nlat, nlng], {
-              draggable: 'true',
-              // layer's index in 'layers' array
-              layer: layers.length - 1,
-              // point's index in 'points' array
-              point: points.length - 1
-            }).addTo(map).
-              bindPopup('<b>destination</b><br/>' +
-                nlat.toFixed(5) + '; ' + nlng.toFixed(5));
-            break; }
-        }
-        // adding click function to markers
-        marker.on('click', onMarkerClick);
-        marker.on('dragstart', onMarkerDragStart);
-        marker.on('dragend', onMarkerDragEnd);
-        marker.on('contextmenu', function (e) {
-          if (work_mode != 'select') {
-            map.contextmenu.hide();
-            return false;
-          }
-          clicked = e.target._leaflet_id
-        });
-        // adding markers to layer
-        layers[layers.length - 1].addLayer(marker);
+      var started = false;
+      if (!poly_state[0]) {
+        // creating new layer for point
+        layers.push(new L.FeatureGroup());
+        poly_state[0] = layers[layers.length - 1];
+        started = true;
       }
-      last_actions.push(['add', layers.length - 1]);
-      // draw markers
-      map.addLayer(layers[layers.length - 1]);
+      // creating marker
+      var marker = draw_marker('handle', [lat, lng]);
+      // add marker to layer
+      poly_state[0].addLayer(marker);
+      if (started) {
+        poly_state[1].push(marker);
+        last_actions.push(['handle', [marker._leaflet_id]]);
+      } else {
+        var last = poly_state[1].slice(-1)[0];
+        var line = L.polyline([last._latlng, [lat, lng]],
+          {color: 'green'});
+        poly_state[0].addLayer(line);
+        last.options.out = line;
+        last_actions.push(['handle',
+          [marker._leaflet_id, last._leaflet_id, line]]);
+        marker.options.in = line;
+        poly_state[1].push(marker);
+      }
+      // and draw it on map
+      map.addLayer(poly_state[0]);
       break; }
   }
 }
@@ -634,6 +560,13 @@ function onMarkerClick(e) {
       var temp = delete_marker(l_id);
       last_actions.push(temp);
       break; }
+    case 'poly': {
+      if (e.target == poly_state[1][poly_state[1].length - 1]) {
+        if (poly_state[1].length > 2)
+          poly_ready();
+      }
+      break;
+    }
   }
 }
 
@@ -642,6 +575,7 @@ function onMarkerDragStart(e) {
   /* an easy protection from dragging markers in not 'select'
      work mode: equate new coordinates to old */
   map.contextmenu.hide();
+  // fail on polygon mode
   if (work_mode != 'select') {
     var layer = e.target.options.layer;
     layers[layer].removeLayer(e.target);
@@ -657,24 +591,40 @@ function onMarkerDragEnd(e) {
   // getting new coordinates of marker
   var lat = marker._latlng.lat;
   var lng = marker._latlng.lng;
-  last_actions.push(['move', points[marker.options.point], marker._leaflet_id]);
-  // changing data in array
-  points[marker.options.point] = [lat, lng];
   var type = get_type(marker);
-  
-  // binding new popup
-  switch (type) {
-    case 'default': {
-      marker.bindPopup(lat.toFixed(5) + '; ' + lng.toFixed(5));
-    break; }
-    case 'origin': {
-      marker.bindPopup('<b>origin</b><br/>' +
-        lat.toFixed(5) + '; ' + lng.toFixed(5));
-    break; }
-    case 'destination': {
-      marker.bindPopup('<b>destination</b><br/>' +
-        lat.toFixed(5) + '; ' + lng.toFixed(5));
-    break; }
+  if (type == 'handle') {
+    var line;
+    if (marker.options.out != undefined) {
+      line = marker.options.out;
+      line._latlngs[0] = [lat, lng];
+      map.removeLayer(line);
+      map.addLayer(line);
+    }
+    if (marker.options.in != undefined) {
+      line = marker.options.in;
+      line._latlngs[1] = [lat, lng];
+      map.removeLayer(line);
+      map.addLayer(line);
+    }
+  } else {
+    last_actions.push(['move', points[marker.options.point], marker._leaflet_id]);
+    // changing data in array
+    points[marker.options.point] = [lat, lng];
+    
+    // binding new popup
+    switch (type) {
+      case 'default': {
+        marker.bindPopup(lat.toFixed(5) + '; ' + lng.toFixed(5));
+      break; }
+      case 'origin': {
+        marker.bindPopup('<b>origin</b><br/>' +
+          lat.toFixed(5) + '; ' + lng.toFixed(5));
+      break; }
+      case 'destination': {
+        marker.bindPopup('<b>destination</b><br/>' +
+          lat.toFixed(5) + '; ' + lng.toFixed(5));
+      break; }
+    }
   }
 }
 /* ---------- ----- -------- ---------- */ }
@@ -839,6 +789,12 @@ function save() {
   document.body.removeChild(a);
 }
 
+// load function
+function load() {
+  map.contextmenu.hide();
+  /* here will be load function */
+}
+
 // undo function
 function undo() {
   map.contextmenu.hide();
@@ -850,21 +806,25 @@ function undo() {
   // type of last action
   var type = action[0]
   switch (type) {
-    /* 'add' type: delete created layer.
-       Element structure:
-         ['add', layer] */
     case 'add': {
+      /* 'add' type: delete created layer.
+         Element structure:
+           ['add', layer] */
       // get layer index
       var layer = action[1];
+      //
+      for (i in layers[layer]._layers) {
+        delete points[map._layers[i].options.point];
+      }
       // remove layer from the map
       map.removeLayer(layers[layer]);
       // and the 'layers' array
       delete layers[layer];
       break; }
-    /* 'move' type: move marker back.
-       Element structure:
-         ['move', [old_lat, old_lng], marker_leaflet_id] */
     case 'move': {
+      /* 'move' type: move marker back.
+         Element structure:
+           ['move', [old_lat, old_lng], marker_leaflet_id] */
       // get marker
       var marker = map._layers[action[2]];
       // get index in 'points' array
@@ -877,10 +837,10 @@ function undo() {
       map.removeLayer(marker);
       map.addLayer(marker);
       break; }
-    /* 'delete' type: return deleted layers.
-       Element structure:
-         ['delete', [layers]] */
     case 'delete': {
+      /* 'delete' type: return deleted layers.
+         Element structure:
+           ['delete', [layers]] */
       // get deleted layers array
       var deleted = action[1];
       // if point and layer were deleted
@@ -915,13 +875,42 @@ function undo() {
         layers[layer_index].addLayer(point);
       }
       break; }
-    /* 'handle' type:  */
     case 'handle': {
+      /* 'handle' type: delete created handle
+         Element structure:
+           ['handle', [element(s)]] */
+      var options = action[1];
+      if (options.length == 1) {
+        delete_marker(options[0]);
+        poly_state[0] = false;
+        poly_state[1] = [];
+      } else {
+        var line = options[2];
+        map.removeLayer(line);
+        delete_marker(options[0]);
+        poly_state[1].pop();
+      }
       break; }
-    /* 'change' type: change type of marker back.
-       Element structure:
-         ['change', marker_leaflet_id, previous_type] */
+    case 'polygon': {
+      /* 'polygon' type: unlock created polygon and
+         delete points from it.
+         Element structure:
+           ['polygon', [poly_state[1], poly_state[2], points_layer]] */
+      var options = action[1];
+      poly_state[1] = options[0];
+      poly_state[2] = options[1];
+      poly_state[0] = layers[poly_state[1].options.layer];
+      var line = poly_state[1].options.out;
+      map.removeLayer(line);
+      poly_state[1].options.out = undefined;
+      poly_state[2].options.in = undefined;
+      poly_state[0].removeLayer[options[2]];
+      map.removeLayer(options[2]);
+      break; }
     case 'change': {
+      /* 'change' type: change type of marker back.
+         Element structure:
+           ['change', marker_leaflet_id, previous_type] */
       var marker = action[1];
       var type = action[2];
       change_to(type, marker);
@@ -930,31 +919,65 @@ function undo() {
   }
   return true;
 }
+
+function poly_cancel() {
+  if (poly_state[0]) {
+    map.removeLayer(poly_state[0]);
+    poly_state[0] = false;
+    last_actions = last_actions.slice(0, -poly_state[1].length);
+    poly_state[1] = [];
+  }
+}
+
+function poly_ready () {
+  var line = L.polyline([poly_state[1]._latlng, poly_state[2]._latlng],
+    {color: 'blue'});
+  poly_state[0].addLayer(line);
+  poly_state[1].options.out = line;
+  poly_state[2].options.in = line;
+  var layer = new L.FeatureGroup();
+  // parsing input for number
+  count = parseInt(document.getElementById('count').value);
+  // if wrong number set it to default
+  if (isNaN(count) || count <= 0)
+    count = 20;
+  // showing number
+  document.getElementById('count').value = count;
+      
+  // getting bounds of polygon
+  bounds = [
+    map.getBounds()._southWest.lat,  // min latitude
+    map.getBounds()._northEast.lat,  // max latitude
+    map.getBounds()._southWest.lng,  // min longitude
+    map.getBounds()._northEast.lng]; // max longitude
+  for (i = 0; i < count; i++) {
+    // generate random coordinates
+    var not_in_circle = true;
+    var nlat = 0;
+    var nlng = 0;
+    while (not_in_circle) {
+      nlat = (Math.random() - 0.5) * (0.01 * 2 / 3);
+      nlng = (Math.random() - 0.5) * 0.01;
+      if ((nlat << 1) + (nlng << 1) <= 2 / 3 * (0.01 << 1))
+        not_in_circle = false;
+    }
+    nlat += 48.7819;
+    nlng += 44.7777;
+    // writing point to 'points' array
+    points.push([nlat, nlng]);
+    // creating marker
+    var marker = draw_marker(point_type, [nlat, nlng]);
+    // adding markers to layer
+    layer.addLayer(marker);
+  }
+  // draw markers
+  poly_state[0].addLayer(layer);
+  map.addLayer(poly_state[0]);
+  last_actions.push(['polygon', [poly_state[1], layer]]);
+  poly_state[1] = [];
+  poly_state[0] = false;
+}
 /* ---------- ------- --------- ---------- */ }
 
-/* ---------- other ---------- */ {
-
-function get_userid() {
-  // increment global uid
-  uid += 1;
-  // if userID == '#ffffff', then reset it to 0
-  if (uid == (1 << 24))
-    uid = 0;
-  // return userID
-  return '#' + ('000000' + uid.toString(16)).slice(-6);
-}
-
-function get_type(marker) {
-  /* some strange way to get state of marker:
-     get name of it's icon, then cut 'img/' in beginning
-     and '.png' at the end. If name is 'icon' then it is
-     a default marker */
-  var m_type = marker.options.icon.options.iconUrl.slice(4, -4);
-  if (m_type == 'icon')
-    m_type = 'default';
-  return m_type;
-}
-    
 // binding function 'onClick' with map click event
 map.on('click', onClick);
-/* ---------- ----- ---------- */ }

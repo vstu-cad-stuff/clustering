@@ -375,6 +375,7 @@ L.Destination = L.Marker.extend({
 L.destination = function (t, e) { return new L.Destination(t, e) };
 
 L.Handle = L.Marker.extend({
+   ilatlng: undefined,
    options: {
       draggable: 'true',
       layer: 0,
@@ -534,6 +535,7 @@ function onClick(e) {
         last_actions.push(['handle',
           [marker._leaflet_id, last._leaflet_id, line]]);
         marker.options.in = line;
+        marker.ilatlng = marker._latlng;
         poly_state[1].push(marker);
       }
       // and draw it on map
@@ -561,12 +563,9 @@ function onMarkerClick(e) {
       last_actions.push(temp);
       break; }
     case 'poly': {
-      if (e.target == poly_state[1][poly_state[1].length - 1]) {
-        if (poly_state[1].length > 2)
-          poly_ready();
-      }
-      break;
-    }
+      if (e.target == poly_state[1][0])
+        poly_ready();
+      break; }
   }
 }
 
@@ -575,12 +574,17 @@ function onMarkerDragStart(e) {
   /* an easy protection from dragging markers in not 'select'
      work mode: equate new coordinates to old */
   map.contextmenu.hide();
-  // fail on polygon mode
-  if (work_mode != 'select') {
-    var layer = e.target.options.layer;
+  var marker = e.target;
+  var marker_type = get_type(marker);
+  if (work_mode != 'select' && !(work_mode == 'poly' && marker_type == 'handle')) {
+    var layer = marker.options.layer;
     layers[layer].removeLayer(e.target);
-    e.target._latlng.lat = points[e.target.options.point][0];
-    e.target._latlng.lng = points[e.target.options.point][1];
+    if (marker_type != 'handle') {
+      marker._latlng.lat = points[marker.options.point][0];
+      marker._latlng.lng = points[marker.options.point][1];
+    } else {
+      marker._latlng = marker.ilatlng;
+    }    
     layers[layer].addLayer(e.target);
   }
 }
@@ -606,6 +610,7 @@ function onMarkerDragEnd(e) {
       map.removeLayer(line);
       map.addLayer(line);
     }
+    marker.ilatlng = marker._latlng;
   } else {
     last_actions.push(['move', points[marker.options.point], marker._leaflet_id]);
     // changing data in array
@@ -886,6 +891,7 @@ function undo() {
         poly_state[1] = [];
       } else {
         var line = options[2];
+        poly_state[0].removeLayer(line);
         map.removeLayer(line);
         delete_marker(options[0]);
         poly_state[1].pop();
@@ -895,17 +901,29 @@ function undo() {
       /* 'polygon' type: unlock created polygon and
          delete points from it.
          Element structure:
-           ['polygon', [poly_state[1], poly_state[2], points_layer]] */
+           ['polygon', [poly_state[1], points_layer]] */
       var options = action[1];
       poly_state[1] = options[0];
-      poly_state[2] = options[1];
-      poly_state[0] = layers[poly_state[1].options.layer];
-      var line = poly_state[1].options.out;
+      var last = poly_state[1].slice(-1)[0];
+      var first = poly_state[1][0];
+      poly_state[0] = layers[last.options.layer];
+      var line = last.options.out;
+      poly_state[0].removeLayer(line);
       map.removeLayer(line);
-      poly_state[1].options.out = undefined;
-      poly_state[2].options.in = undefined;
-      poly_state[0].removeLayer[options[2]];
-      map.removeLayer(options[2]);
+      last.options.out = undefined;
+      first.options.in = undefined;
+      poly_state[0].removeLayer(options[1]);
+      map.removeLayer(options[1]);
+      break; }
+    case 'poly_cancel': {
+      /* 'poly_cancel' type: return cancelled polygon.
+         Element structure:
+           ['poly_cancel', poly_state[0], poly_state[1]] */
+      var layer = action[1];
+      var handles = action[2];
+      poly_state[0] = layer;
+      poly_state[1] = handles;
+      map.addLayer(layer);
       break; }
     case 'change': {
       /* 'change' type: change type of marker back.
@@ -914,68 +932,73 @@ function undo() {
       var marker = action[1];
       var type = action[2];
       change_to(type, marker);
-      break;
-    }
+      break; }
   }
   return true;
 }
 
+// cancel the current polygon
 function poly_cancel() {
   if (poly_state[0]) {
     map.removeLayer(poly_state[0]);
+    last_actions.push(['poly_cancel', poly_state[0], poly_state[1]]);
     poly_state[0] = false;
-    last_actions = last_actions.slice(0, -poly_state[1].length);
     poly_state[1] = [];
   }
 }
 
+// create points inside the current polygon
 function poly_ready () {
-  var line = L.polyline([poly_state[1]._latlng, poly_state[2]._latlng],
-    {color: 'blue'});
-  poly_state[0].addLayer(line);
-  poly_state[1].options.out = line;
-  poly_state[2].options.in = line;
-  var layer = new L.FeatureGroup();
-  // parsing input for number
-  count = parseInt(document.getElementById('count').value);
-  // if wrong number set it to default
-  if (isNaN(count) || count <= 0)
-    count = 20;
-  // showing number
-  document.getElementById('count').value = count;
-      
-  // getting bounds of polygon
-  bounds = [
-    map.getBounds()._southWest.lat,  // min latitude
-    map.getBounds()._northEast.lat,  // max latitude
-    map.getBounds()._southWest.lng,  // min longitude
-    map.getBounds()._northEast.lng]; // max longitude
-  for (i = 0; i < count; i++) {
-    // generate random coordinates
-    var not_in_circle = true;
-    var nlat = 0;
-    var nlng = 0;
-    while (not_in_circle) {
-      nlat = (Math.random() - 0.5) * (0.01 * 2 / 3);
-      nlng = (Math.random() - 0.5) * 0.01;
-      if ((nlat << 1) + (nlng << 1) <= 2 / 3 * (0.01 << 1))
-        not_in_circle = false;
+  if (poly_state[1].length > 2) {
+    var last = poly_state[1].slice(-1)[0];
+    var first = poly_state[1][0];
+    var line = L.polyline([last._latlng, first._latlng],
+      {color: 'blue'});
+    poly_state[0].addLayer(line);
+    last.options.out = line;
+    first.options.in = line;
+    var layer = new L.FeatureGroup();
+    // parsing input for number
+    count = parseInt(document.getElementById('count').value);
+    // if wrong number set it to default
+    if (isNaN(count) || count <= 0)
+      count = 20;
+    // showing number
+    document.getElementById('count').value = count;
+        
+    // getting bounds of polygon
+    bounds = [
+      map.getBounds()._southWest.lat,  // min latitude
+      map.getBounds()._northEast.lat,  // max latitude
+      map.getBounds()._southWest.lng,  // min longitude
+      map.getBounds()._northEast.lng]; // max longitude
+    for (i = 0; i < count; i++) {
+      // generate random coordinates
+      var not_in_circle = true;
+      var nlat = 0;
+      var nlng = 0;
+      while (not_in_circle) {
+        nlat = (Math.random() - 0.5) * (0.01 * 2 / 3);
+        nlng = (Math.random() - 0.5) * 0.01;
+        if ((nlat << 1) + (nlng << 1) <= 2 / 3 * (0.01 << 1))
+          not_in_circle = false;
+      }
+      nlat += 48.7819;
+      nlng += 44.7777;
+      // writing point to 'points' array
+      points.push([nlat, nlng]);
+      // creating marker
+      var marker = draw_marker(point_type, [nlat, nlng]);
+      // adding markers to layer
+      layer.addLayer(marker);
     }
-    nlat += 48.7819;
-    nlng += 44.7777;
-    // writing point to 'points' array
-    points.push([nlat, nlng]);
-    // creating marker
-    var marker = draw_marker(point_type, [nlat, nlng]);
-    // adding markers to layer
-    layer.addLayer(marker);
+    // draw markers
+    poly_state[0].addLayer(layer);
+    map.addLayer(poly_state[0]);
+    last_actions.push(['polygon', [poly_state[1], layer]]);
+    poly_state[1] = [];
+    poly_state[0] = false;
   }
-  // draw markers
-  poly_state[0].addLayer(layer);
-  map.addLayer(poly_state[0]);
-  last_actions.push(['polygon', [poly_state[1], layer]]);
-  poly_state[1] = [];
-  poly_state[0] = false;
 }
 /* ---------- ------- --------- ---------- */ }
 

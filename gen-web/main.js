@@ -287,7 +287,10 @@ function delete_marker(L_id) {
         }
       }
     }
+  } else {
+    delete points[marker.options.point];
   }
+  map.removeLayer(marker);
   // getting layer._layers properties
   var props = Object.getOwnPropertyNames(layers[layer]._layers);
   // if layer._layers does not have any properties
@@ -1053,7 +1056,6 @@ function poly_ready () {
             not_in_poly = !not_in_poly;
           j = k
         }
-        console.log(nlat, nlng, not_in_poly);
       }
       // writing point to 'points' array
       points.push([nlat, nlng]);

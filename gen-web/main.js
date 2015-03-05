@@ -838,13 +838,15 @@ function save() {
   // for each point
   for (i = 0; i < points.length; i++) {
     // variable for element of 'points' array
-    var el = points[i];  
-    // write it to 'text'
-    text += el[2] + ', ';
-    text += el[0].toFixed(6) + ', ';
-    text += el[1].toFixed(6);
-    // line break
-    text += '\n';
+    var el = points[i];
+    if (el != undefined) {
+      // write it to 'text'
+      text += el[2] + ', ';
+      text += el[0].toFixed(6) + ', ';
+      text += el[1].toFixed(6);
+      // line break
+      text += '\n';
+    }
   }
 
   // creating an 'a' element for downloading

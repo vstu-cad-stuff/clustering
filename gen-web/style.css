@@ -25,21 +25,12 @@
 
 #tools li, #poly_sub li, #select_type li {
   display: inline-block;
-  opacity: .5;
   width: 26px;
   padding: 5px 0px;
   margin: 0;
 }
 
 #tools li, #select_type li {
-  border-bottom: 1px solid #999;
-}
-
-#tools li:hover, #poly_sub li:hover, #select_type li:hover {
-  opacity: 1;
-}
-
-#tools li:hover, #select_type li:hover {
   border-bottom: 1px solid #ccc;
 }
 
@@ -47,22 +38,26 @@
   border: 0;
 }
 
-#tools li.last:hover, #poly_sub li.last:hover, #select_type li.last:hover {
-  border: 0;
-}
-
-#tools li.selected, #select_type li.selected {
-  opacity: 1;
-  border-bottom: 1px solid #ccc;
-}
-
 #tools li button, #poly_sub li button, #select_type li button {
   border: none;
   padding: none;
   height: 16px;
   width: 16px;
+  opacity: .5;
   background-color: #fff;
   background-size: contain;
+}
+
+#tools li.selected button, #poly_sub li.selected button, #select_type li.selected button {
+  opacity: 1;
+}
+
+#tools li button:hover, #poly_sub li button:hover, #select_type li button:hover {
+  opacity: 1;
+}
+
+#tools li button[disabled]:hover, #poly_sub li button[disabled]:hover, #select_type li button[disabled]:hover {
+  opacity: 0.5;
 }
 
 /* polygon submenu */
@@ -78,10 +73,6 @@
 }
 
 #poly_sub li{
-  border-right: 1px solid #999;
-}
-
-#poly_sub li:hover {
   border-right: 1px solid #ccc;
 }
 

@@ -304,6 +304,13 @@ function delete_marker(L_id) {
   }
   return temp;
 }
+
+function hide_polygon() {
+  // hide completed polygon
+  map.removeLayer(poly_state[0]);
+  poly_state[0] = false;
+  poly_state[1] = [];
+}
 /* ---------- ----- ---------- */ }
 
 /* ---------- context menu functions ---------- */ {
@@ -443,6 +450,8 @@ L.handle = function (t, e) { return new L.Handle(t, e) };
 /* ---------- event handlers ---------- */ {
 // on map click
 function onClick(e) {
+  if (poly_state[1] == true)
+    hide_polygon();
   // getting coordinates of click
   lat = e.latlng.lat;
   lng = e.latlng.lng;
@@ -563,6 +572,7 @@ function onClick(e) {
         layers.push(new L.FeatureGroup());
         poly_state[0] = layers[layers.length - 1];
         started = true;
+        document.getElementById('poly_cancel').disabled = false;
       }
       // creating marker
       var marker = draw_marker('handle', [lat, lng]);
@@ -583,6 +593,8 @@ function onClick(e) {
       }
       marker.options.vertex = poly_state[1].length;
       poly_state[1].push(marker);
+      if (poly_state[1].length > 2)
+        document.getElementById('poly_ready').disabled = false;
       // and draw it on map
       map.addLayer(poly_state[0]);
       break; }
@@ -591,6 +603,8 @@ function onClick(e) {
 
 // on marker click
 function onMarkerClick(e) {
+  if (poly_state[1] == true)
+    hide_polygon();
   // doing stuff depending on work mode
   switch (work_mode) {
     case 'select': {
@@ -616,6 +630,8 @@ function onMarkerClick(e) {
 
 // on marker drag start
 function onMarkerDragStart(e) {
+  if (poly_state[1] == true)
+    hide_polygon();
   /* an easy protection from dragging markers in not 'select'
      work mode: equate new coordinates to old */
   map.contextmenu.hide();
@@ -685,6 +701,8 @@ function onMarkerDragEnd(e) {
 // on toolbar's element click
 function select(option) {
   map.contextmenu.hide();
+  if (poly_state[1] == true)
+    hide_polygon();
   // setting work mode
   work_mode = option;
   // doing stuff depending on work mode
@@ -780,6 +798,8 @@ function select(option) {
 // on point type selection
 function select_type(option) {
   map.contextmenu.hide();
+  if (poly_state[1] == true)
+    hide_polygon();
   // changing point's type
   point_type = option;
   // doing stuff depending on work mode
@@ -808,6 +828,8 @@ function select_type(option) {
 // save function
 function save() {
   map.contextmenu.hide();
+  if (poly_state[1] == true)
+    hide_polygon();
   // variable for text
   var text = '';
 
@@ -996,81 +1018,82 @@ function poly_cancel() {
     poly_state[0] = false;
     poly_state[1] = [];
   }
+  document.getElementById('poly_cancel').disabled = true;
+  document.getElementById('poly_ready').disabled = true;
 }
 
 // create points inside the current polygon
 function poly_ready () {
-  if (poly_state[1].length > 2) {
-    var last = poly_state[1].slice(-1)[0];
-    var first = poly_state[1][0];
-    var line = L.polyline([last._latlng, first._latlng],
-      {color: 'blue'});
-    poly_state[0].addLayer(line);
-    last.options.out = line;
-    first.options.in = line;
-    var layer = new L.FeatureGroup();
-    // parsing input for number
-    count = parseInt(document.getElementById('count').value);
-    // if wrong number set it to default
-    if (isNaN(count) || count <= 0)
-      count = 20;
-    // showing number
-    document.getElementById('count').value = count;
-        
-    // getting bounds of polygon
-    var len = poly_state[1].length;
-    bounds = [
-        poly_state[1][0]._latlng.lat,  // min latitude
-        poly_state[1][0]._latlng.lat,  // max latitude
-        poly_state[1][0]._latlng.lng,  // min longitude
-        poly_state[1][0]._latlng.lng]; // max longitude
-    var i = 0;
-    while (i < len) {
-      if (poly_state[1][i]._latlng.lat < bounds[0])
-        bounds[0] = poly_state[1][i]._latlng.lat;
-      if (poly_state[1][i]._latlng.lat > bounds[1])
-        bounds[1] = poly_state[1][i]._latlng.lat;
-      if (poly_state[1][i]._latlng.lng < bounds[2])
-        bounds[2] = poly_state[1][i]._latlng.lng;
-      if (poly_state[1][i]._latlng.lng > bounds[3])
-        bounds[3] = poly_state[1][i]._latlng.lng;
-      i++;
-    };
-    
-    for (i = 0; i < count; i++) {
-      // generate random coordinates
-      var not_in_poly = true;
-      var nlat, nlng;
-      while (not_in_poly) {
-        nlat = bounds[0] + Math.random() * (bounds[1] - bounds[0]);
-        nlng = bounds[2] + Math.random() * (bounds[3] - bounds[2]);
-        
-        var p = poly_state[1];
-        var k = 0;
-        var j = p.length - 1;
-        for (k in p) {
-          if (((p[k]._latlng.lat > nlat) != (p[j]._latlng.lat > nlat))
-              && (nlng < (p[j]._latlng.lng - p[k]._latlng.lng) *
-              (nlat - p[k]._latlng.lat) /
-              (p[j]._latlng.lat - p[k]._latlng.lat) + p[k]._latlng.lng))
-            not_in_poly = !not_in_poly;
-          j = k
-        }
+  var last = poly_state[1].slice(-1)[0];
+  var first = poly_state[1][0];
+  var line = L.polyline([last._latlng, first._latlng],
+    {color: 'blue'});
+  poly_state[0].addLayer(line);
+  last.options.out = line;
+  first.options.in = line;
+  var layer = new L.FeatureGroup();
+  // parsing input for number
+  count = parseInt(document.getElementById('count').value);
+  // if wrong number set it to default
+  if (isNaN(count) || count <= 0)
+    count = 20;
+  // showing number
+  document.getElementById('count').value = count;
+      
+  // getting bounds of polygon
+  var len = poly_state[1].length;
+  bounds = [
+      poly_state[1][0]._latlng.lat,  // min latitude
+      poly_state[1][0]._latlng.lat,  // max latitude
+      poly_state[1][0]._latlng.lng,  // min longitude
+      poly_state[1][0]._latlng.lng]; // max longitude
+  var i = 0;
+  while (i < len) {
+    if (poly_state[1][i]._latlng.lat < bounds[0])
+      bounds[0] = poly_state[1][i]._latlng.lat;
+    if (poly_state[1][i]._latlng.lat > bounds[1])
+      bounds[1] = poly_state[1][i]._latlng.lat;
+    if (poly_state[1][i]._latlng.lng < bounds[2])
+      bounds[2] = poly_state[1][i]._latlng.lng;
+    if (poly_state[1][i]._latlng.lng > bounds[3])
+      bounds[3] = poly_state[1][i]._latlng.lng;
+    i++;
+  };
+  
+  for (i = 0; i < count; i++) {
+    // generate random coordinates
+    var not_in_poly = true;
+    var nlat, nlng;
+    while (not_in_poly) {
+      nlat = bounds[0] + Math.random() * (bounds[1] - bounds[0]);
+      nlng = bounds[2] + Math.random() * (bounds[3] - bounds[2]);
+      
+      var p = poly_state[1];
+      var k = 0;
+      var j = p.length - 1;
+      for (k in p) {
+        if (((p[k]._latlng.lat > nlat) != (p[j]._latlng.lat > nlat))
+            && (nlng < (p[j]._latlng.lng - p[k]._latlng.lng) *
+            (nlat - p[k]._latlng.lat) /
+            (p[j]._latlng.lat - p[k]._latlng.lat) + p[k]._latlng.lng))
+          not_in_poly = !not_in_poly;
+        j = k
       }
-      // writing point to 'points' array
-      points.push([nlat, nlng]);
-      // creating marker
-      var marker = draw_marker(point_type, [nlat, nlng]);
-      // adding markers to layer
-      layer.addLayer(marker);
     }
-    // draw markers
-    poly_state[0].addLayer(layer);
-    map.addLayer(poly_state[0]);
-    last_actions.push(['polygon', [poly_state[1], layer]]);
-    poly_state[1] = [];
-    poly_state[0] = false;
+    // writing point to 'points' array
+    points.push([nlat, nlng]);
+    // creating marker
+    var marker = draw_marker(point_type, [nlat, nlng]);
+    // adding markers to layer
+    layer.addLayer(marker);
   }
+  // draw markers
+  map.addLayer(poly_state[0]);
+  map.addLayer(layer);
+  last_actions.push(['polygon', [poly_state[1], layer]]);
+  poly_state[1] = true;
+  document.getElementById('poly_cancel').disabled = true;
+  document.getElementById('poly_ready').disabled = true;
 }
 /* ---------- ------- --------- ---------- */ }
 

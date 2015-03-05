@@ -12,7 +12,10 @@
     <script src="http://cdn.leafletjs.com/leaflet-0.7/leaflet.js" onerror="script_error()"></script>
     <script src="https://rawgit.com/aratcliffe/Leaflet.contextmenu/master/dist/leaflet.contextmenu.js" onerror="script_error()"></script>
     <link onerror="script_error()" rel="stylesheet" href="https://rawgit.com/aratcliffe/Leaflet.contextmenu/master/dist/leaflet.contextmenu.css" />
-    <!--script src="http://leaflet.github.io/Leaflet.draw/leaflet.draw.js" onerror="script_error()"></script-->
+<!--     <link rel="stylesheet" href="leaflet.css" />
+    <script src="leaflet.js"></script>
+    <script src="leaflet.contextmenu.js"></script>
+    <link rel="stylesheet" href="leaflet.contextmenu.css" /> -->
     <link rel="stylesheet" href="../main.css" />
     <link rel="stylesheet" href="style.css" />
   </head>
@@ -73,6 +76,7 @@
           style="background-image: url('img/upload.png')"
           onClick="load()"
           title="Load points data"
+          disabled
         />
       </li>
       <li class="last" id="undo">
@@ -86,14 +90,18 @@
     <ul id="poly_sub">
       <li id="poly_sub_cancel">
         <button
+          id="poly_cancel"
           style="background-image: url('img/cancel.png')"
           onClick="poly_cancel()"
+          disabled
         />
       </li>
       <li class="last" id="poly_sub_ready">
         <button
+          id="poly_ready"
           style="background-image: url('img/ready.png')"
           onClick="poly_ready()"
+          disabled
         />
       </li>
     </ul>

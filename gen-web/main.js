@@ -18,7 +18,7 @@ var map = L.map('map', {closePopupOnClick: false}).
 L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png').addTo(map);
 
 /* array for points. Structure of an element:
-   [point_lat, point_lng] */
+   [point_lat, point_lng, point_type] */
 var points = [];
 
 // array of layers, needed for easy deletion and selection
@@ -235,6 +235,8 @@ function change_to(type, L_id) {
   map._layers[L_id]._leaflet_id = L_id;
   // add created marker to previous layer contained it
   layers[layer].addLayer(map._layers[L_id]);
+  //
+  points[point][2] = type;
   // return prev_type because we'll need it in undo function
   return prev_type;
 }
@@ -473,7 +475,7 @@ function onClick(e) {
       // creating new layer for point
       layers.push(new L.FeatureGroup());
       // writing point to 'points' array
-      points.push([lat, lng]);
+      points.push([lat, lng, point_type]);
       // creating marker
       var marker = draw_marker(point_type, [lat, lng]);
       // add marker to layer
@@ -514,7 +516,7 @@ function onClick(e) {
         nlat += lat;
         nlng += lng;
         // writing point to 'points' array
-        points.push([nlat, nlng]);
+        points.push([nlat, nlng, point_type]);
         // creating marker
         var marker = draw_marker(point_type, [nlat, nlng]);
         // adding markers to layer
@@ -551,7 +553,7 @@ function onClick(e) {
         nlat = bounds[0] + Math.random() * (bounds[1] - bounds[0]);
         nlng = bounds[2] + Math.random() * (bounds[3] - bounds[2]);
         // writing point to 'points' array
-        points.push([nlat, nlng]);
+        points.push([nlat, nlng, point_type]);
         // creating marker
         var marker = draw_marker(point_type, [nlat, nlng]);
         // adding markers to layer
@@ -677,7 +679,7 @@ function onMarkerDragEnd(e) {
     last_actions.push(['move',
         points[marker.options.point], marker._leaflet_id]);
     // changing data in array
-    points[marker.options.point] = [lat, lng];
+    points[marker.options.point] = [lat, lng, type];
     
     // binding new popup
     switch (type) {
@@ -835,16 +837,12 @@ function save() {
 
   // for each point
   for (i = 0; i < points.length; i++) {
-    // variable for coordinates
-    var el = points[i];      
-    // for each coordinate
-    for (j = 0; j < el.length; j++) {
-      // write it to 'text'
-      text += el[j].toFixed(6);
-      // write comma if it's not last element
-      if (j < el.length - 1)
-        text += ', ';
-    }
+    // variable for element of 'points' array
+    var el = points[i];  
+    // write it to 'text'
+    text += el[2] + ', ';
+    text += el[0].toFixed(6) + ', ';
+    text += el[1].toFixed(6);
     // line break
     text += '\n';
   }
@@ -1081,7 +1079,7 @@ function poly_ready () {
       }
     }
     // writing point to 'points' array
-    points.push([nlat, nlng]);
+    points.push([nlat, nlng, point_type]);
     // creating marker
     var marker = draw_marker(point_type, [nlat, nlng]);
     // adding markers to layer

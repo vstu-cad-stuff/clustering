@@ -91,6 +91,28 @@ var icon_handle = L.icon({
 /* ---------- ------ ----- ---------- */ }
 
 /* ---------- other ---------- */ {
+function everytime() {
+  if (poly_state[1] == true) {
+    // hide completed polygon
+    map.removeLayer(poly_state[0]);
+    poly_state[0] = false;
+    poly_state[1] = [];
+  } else {
+    var undef_pos = poly_state[1].slice(0).sort().indexOf(undefined)
+    if (undef_pos > 2) {
+      document.getElementById('poly_ready').disabled = false;
+    } else {
+      document.getElementById('poly_ready').disabled = true;
+    }
+    if (undef_pos > 0) {
+      document.getElementById('poly_ready').disabled = false;
+    } else {
+      document.getElementById('poly_ready').disabled = true;
+    }
+  }
+  map.contextmenu.hide();
+}
+
 function get_userid() {
   // increment global uid
   uid += 1;
@@ -254,41 +276,63 @@ function delete_marker(L_id) {
     var inline = marker.options.in;
     var outline = marker.options.out;
     var vertex = marker.options.vertex;
-    if (inline != undefined) {
-      layers[layer].removeLayer(inline);
-      map.removeLayer(inline);
-      var i = 1;
-      while (poly_state[1][vertex + i] == undefined &&
-          vertex + i < poly_state[1].length) {
-        i++;
-      }
-      if (vertex + i < poly_state[1].length &&
-          poly_state[1][vertex + i] != undefined) {
-        inline._latlngs[1] = poly_state[1][vertex + 1]._latlng;
-        poly_state[1][vertex + 1].options.in = inline;
-        layers[layer].addLayer(inline);
-        map.addLayer(inline);
+    if (inline == undefined) {
+      if (outline != undefined) {
+        // first point deletion: delete out
+        layers[layer].removeLayer(outline);
+        map.removeLayer(outline);
+        var i = 1;
+        while (poly_state[1][vertex + i] == undefined &&
+            vertex + i < poly_state[1].length)
+          i++;
+        if (vertex + i < poly_state[1].length &&
+            poly_state[1][vertex + i] != undefined)
+          poly_state[1][vertex + i].options.in = undefined;
+      } // 'else' here is polygon which has only one point
+    } else {
+      if (outline == undefined) {
+        // last point deletion: delete in
+        layers[layer].removeLayer(inline);
+        map.removeLayer(inline);
+        var i = 1;
+        while (poly_state[1][vertex - i] == undefined &&
+            vertex - i > 0)
+          i++;
+        if (vertex - i > 0 &&
+            poly_state[1][vertex - i] != undefined)
+          poly_state[1][vertex - i].options.out = undefined;
       } else {
-        inline = undefined;
+        // middle point deletion: delete one of lines
+        layers[layer].removeLayer(outline);
+        map.removeLayer(outline);
+        layers[layer].removeLayer(inline);
+        map.removeLayer(inline);
+        var i = 1;
+        var j = 1;
+        while (poly_state[1][vertex + i] == undefined &&
+            vertex + i < poly_state[1].length)
+          i++;
+        while (poly_state[1][vertex - j] == undefined &&
+            vertex - j > 0)
+          j++;
+        if (vertex + i < poly_state[1].length &&
+            poly_state[1][vertex + i] != undefined) {
+          console.log(vertex + i);
+          if (vertex - j >= 0 &&
+              poly_state[1][vertex - j] != undefined) {
+            console.log(vertex - j);
+            inline._latlngs[1] = poly_state[1][vertex + i]._latlng;
+            poly_state[1][vertex - j].options.out = inline;
+            poly_state[1][vertex + i].options.in = inline;
+            layers[layer].addLayer(inline);
+            map.addLayer(inline);
+          } else {
+            poly_state[1][vertex + i].options.in = undefined;
+          }
+        };
       }
-      poly_state[1][vertex - 1].options.out = inline;
     }
-    if (outline != undefined) {
-      layers[layer].removeLayer(outline);
-      map.removeLayer(outline);
-      if (inline != undefined) {
-        outline = undefined;
-      } else {
-        if (vertex + 1 != poly_state[1].length) {
-          outline._latlngs[1] = poly_state[1][vertex + 1]._latlng;
-          poly_state[1][vertex + 1].options.in = inline;
-          layers[layer].addLayer(inline);
-          map.addLayer(inline);
-        } else {
-          inline = undefined;
-        }
-      }
-    }
+    poly_state[1][vertex] = undefined;
   } else {
     delete points[marker.options.point];
   }
@@ -303,15 +347,14 @@ function delete_marker(L_id) {
     map.removeLayer(layers[layer]);
     // and the 'layers' array
     delete layers[layer];
+    if (type == 'handle') {
+      poly_state[0] = false;
+      poly_state[1] = [];
+      document.getElementById('poly_cancel').disabled = true;
+      document.getElementById('poly_ready').disabled = true;
+    }
   }
   return temp;
-}
-
-function hide_polygon() {
-  // hide completed polygon
-  map.removeLayer(poly_state[0]);
-  poly_state[0] = false;
-  poly_state[1] = [];
 }
 /* ---------- ----- ---------- */ }
 
@@ -452,8 +495,7 @@ L.handle = function (t, e) { return new L.Handle(t, e) };
 /* ---------- event handlers ---------- */ {
 // on map click
 function onClick(e) {
-  if (poly_state[1] == true)
-    hide_polygon();
+  everytime();
   // getting coordinates of click
   lat = e.latlng.lat;
   lng = e.latlng.lng;
@@ -584,14 +626,27 @@ function onClick(e) {
       if (started) {
         last_actions.push(['handle', [marker._leaflet_id]]);
       } else {
-        var last = poly_state[1].slice(-1)[0];
-        var line = L.polyline([last._latlng, [lat, lng]],
-          {color: 'green'});
-        poly_state[0].addLayer(line);
-        last.options.out = line;
-        last_actions.push(['handle',
-          [marker._leaflet_id, last._leaflet_id, line]]);
-        marker.options.in = line;
+        var i = poly_state[1].length - 1;
+        while (poly_state[1][i] == undefined &&
+            i > 0)
+          i--;
+        if (i >= 0 &&
+            poly_state[1][i] != undefined) {
+          var last = poly_state[1][i];
+        } else {
+          var last = undefined;
+        }
+        if (last == undefined) {
+          return 0
+        } else {        
+          var line = L.polyline([last._latlng, [lat, lng]],
+            {color: 'green'});
+          poly_state[0].addLayer(line);
+          last.options.out = line;
+          last_actions.push(['handle',
+            [marker._leaflet_id, last._leaflet_id, line]]);
+          marker.options.in = line;
+        }
       }
       marker.options.vertex = poly_state[1].length;
       poly_state[1].push(marker);
@@ -605,8 +660,7 @@ function onClick(e) {
 
 // on marker click
 function onMarkerClick(e) {
-  if (poly_state[1] == true)
-    hide_polygon();
+  everytime();
   // doing stuff depending on work mode
   switch (work_mode) {
     case 'select': {
@@ -624,19 +678,23 @@ function onMarkerClick(e) {
       last_actions.push(temp);
       break; }
     case 'poly': {
-      if (e.target == poly_state[1][0])
-        poly_ready();
+      var i = 0;
+      while (poly_state[1][i] == undefined &&
+          i < poly_state[1].length)
+        i++;
+      if (i < poly_state[1].length &&
+          poly_state[1][i] != undefined)
+        if (e.target == poly_state[1][i])
+          poly_ready();
       break; }
   }
 }
 
 // on marker drag start
 function onMarkerDragStart(e) {
-  if (poly_state[1] == true)
-    hide_polygon();
+  everytime();
   /* an easy protection from dragging markers in not 'select'
      work mode: equate new coordinates to old */
-  map.contextmenu.hide();
   var marker = e.target;
   var marker_type = get_type(marker);
   if (work_mode != 'select' &&
@@ -702,9 +760,7 @@ function onMarkerDragEnd(e) {
 /* ---------- toolbar functions ---------- */ {
 // on toolbar's element click
 function select(option) {
-  map.contextmenu.hide();
-  if (poly_state[1] == true)
-    hide_polygon();
+  everytime();
   // setting work mode
   work_mode = option;
   // doing stuff depending on work mode
@@ -799,9 +855,7 @@ function select(option) {
 
 // on point type selection
 function select_type(option) {
-  map.contextmenu.hide();
-  if (poly_state[1] == true)
-    hide_polygon();
+  everytime();
   // changing point's type
   point_type = option;
   // doing stuff depending on work mode
@@ -829,9 +883,7 @@ function select_type(option) {
 
 // save function
 function save() {
-  map.contextmenu.hide();
-  if (poly_state[1] == true)
-    hide_polygon();
+  everytime();
   // variable for text
   var text = '';
 
@@ -866,13 +918,13 @@ function save() {
 
 // load function
 function load() {
-  map.contextmenu.hide();
+  everytime();
   /* here will be load function */
 }
 
 // undo function
 function undo() {
-  map.contextmenu.hide();
+  everytime();
   // if user did nothing
   if (last_actions.length == 0)
     return false;
@@ -1012,6 +1064,7 @@ function undo() {
 
 // cancel the current polygon
 function poly_cancel() {
+  everytime();
   if (poly_state[0]) {
     map.removeLayer(poly_state[0]);
     last_actions.push(['poly_cancel', poly_state[0], poly_state[1]]);
@@ -1024,8 +1077,29 @@ function poly_cancel() {
 
 // create points inside the current polygon
 function poly_ready () {
-  var last = poly_state[1].slice(-1)[0];
-  var first = poly_state[1][0];
+  everytime();
+  var i = poly_state[1].length - 1;
+  while (poly_state[1][i] == undefined &&
+      i > 0)
+    i--;
+  if (i >= 0 &&
+      poly_state[1][i] != undefined) {
+    var last = poly_state[1][i];
+  } else {
+    var last = undefined;
+  }
+  if (last == undefined) return 0;
+  i = 0;
+  while (poly_state[1][i] == undefined &&
+      i < poly_state[1].length)
+    i++;
+  if (i < poly_state[1].length &&
+      poly_state[1][i] != undefined) {
+    var first = poly_state[1][i];
+  } else {
+    var first = undefined;
+  }
+  if (first == undefined) return 0;
   var line = L.polyline([last._latlng, first._latlng],
     {color: 'blue'});
   poly_state[0].addLayer(line);
@@ -1043,20 +1117,22 @@ function poly_ready () {
   // getting bounds of polygon
   var len = poly_state[1].length;
   bounds = [
-      poly_state[1][0]._latlng.lat,  // min latitude
-      poly_state[1][0]._latlng.lat,  // max latitude
-      poly_state[1][0]._latlng.lng,  // min longitude
-      poly_state[1][0]._latlng.lng]; // max longitude
+      first._latlng.lat,  // min latitude
+      first._latlng.lat,  // max latitude
+      first._latlng.lng,  // min longitude
+      first._latlng.lng]; // max longitude
   var i = 0;
   while (i < len) {
-    if (poly_state[1][i]._latlng.lat < bounds[0])
-      bounds[0] = poly_state[1][i]._latlng.lat;
-    if (poly_state[1][i]._latlng.lat > bounds[1])
-      bounds[1] = poly_state[1][i]._latlng.lat;
-    if (poly_state[1][i]._latlng.lng < bounds[2])
-      bounds[2] = poly_state[1][i]._latlng.lng;
-    if (poly_state[1][i]._latlng.lng > bounds[3])
-      bounds[3] = poly_state[1][i]._latlng.lng;
+    if (poly_state[1][i] != undefined) {
+      if (poly_state[1][i]._latlng.lat < bounds[0])
+        bounds[0] = poly_state[1][i]._latlng.lat;
+      if (poly_state[1][i]._latlng.lat > bounds[1])
+        bounds[1] = poly_state[1][i]._latlng.lat;
+      if (poly_state[1][i]._latlng.lng < bounds[2])
+        bounds[2] = poly_state[1][i]._latlng.lng;
+      if (poly_state[1][i]._latlng.lng > bounds[3])
+        bounds[3] = poly_state[1][i]._latlng.lng;
+    }
     i++;
   };
   
@@ -1072,12 +1148,14 @@ function poly_ready () {
       var k = 0;
       var j = p.length - 1;
       for (k in p) {
-        if (((p[k]._latlng.lat > nlat) != (p[j]._latlng.lat > nlat))
-            && (nlng < (p[j]._latlng.lng - p[k]._latlng.lng) *
-            (nlat - p[k]._latlng.lat) /
-            (p[j]._latlng.lat - p[k]._latlng.lat) + p[k]._latlng.lng))
-          not_in_poly = !not_in_poly;
-        j = k
+        if (p[k] != undefined && p[j] != undefined) {
+          if (((p[k]._latlng.lat > nlat) != (p[j]._latlng.lat > nlat))
+              && (nlng < (p[j]._latlng.lng - p[k]._latlng.lng) *
+              (nlat - p[k]._latlng.lat) /
+              (p[j]._latlng.lat - p[k]._latlng.lat) + p[k]._latlng.lng))
+            not_in_poly = !not_in_poly;
+          j = k
+        }
       }
     }
     // writing point to 'points' array

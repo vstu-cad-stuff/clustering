@@ -90,7 +90,7 @@ var icon_handle = L.icon({
 });
 /* ---------- ------ ----- ---------- */ }
 
-/* ---------- other ---------- */ {
+/* ---------- common ---------- */ {
 function everytime() {
   if (poly_state[1] == true) {
     // hide completed polygon
@@ -105,9 +105,9 @@ function everytime() {
       document.getElementById('poly_ready').disabled = true;
     }
     if (undef_pos > 0) {
-      document.getElementById('poly_ready').disabled = false;
+      document.getElementById('poly_cancel').disabled = false;
     } else {
-      document.getElementById('poly_ready').disabled = true;
+      document.getElementById('poly_cancel').disabled = true;
     }
   }
   map.contextmenu.hide();
@@ -317,10 +317,8 @@ function delete_marker(L_id) {
           j++;
         if (vertex + i < poly_state[1].length &&
             poly_state[1][vertex + i] != undefined) {
-          console.log(vertex + i);
           if (vertex - j >= 0 &&
               poly_state[1][vertex - j] != undefined) {
-            console.log(vertex - j);
             inline._latlngs[1] = poly_state[1][vertex + i]._latlng;
             poly_state[1][vertex - j].options.out = inline;
             poly_state[1][vertex + i].options.in = inline;
@@ -356,7 +354,7 @@ function delete_marker(L_id) {
   }
   return temp;
 }
-/* ---------- ----- ---------- */ }
+/* ---------- ------ ---------- */ }
 
 /* ---------- context menu functions ---------- */ {
 function set_as_origin() {
@@ -379,6 +377,7 @@ function set_as_default() {
 function delete_point() {
   var temp = delete_marker(clicked);
   last_actions.push(temp);
+  everytime();
 }
 /* ---------- ------- ---- --------- ---------- */ }
 
@@ -924,7 +923,6 @@ function load() {
 
 // undo function
 function undo() {
-  everytime();
   // if user did nothing
   if (last_actions.length == 0)
     return false;
@@ -973,9 +971,9 @@ function undo() {
       // if point and layer were deleted
       if (deleted.length > 1) {
         // getting layer
-        var layer = deleted[0];
+        var layer = deleted[1];
         // getting point
-        var point = deleted[1];
+        var point = deleted[0];
         // adding point to layer
         layer.addLayer(point);
         // getting layer's index in 'layers' array
@@ -994,10 +992,75 @@ function undo() {
         var point = deleted[0];
         // getting layer's index in 'layers' array
         var layer_index = point.options.layer;
-        // getting point's index in 'points' array
-        var point_index = point.options.point;
-        // adding deleted coordinates of point to 'points' array
-        points[point_index] = [point._latlng.lat, point._latlng.lng];
+        if (get_type(point) != 'handle') {
+          // getting point's index in 'points' array
+          var point_index = point.options.point;
+          // adding deleted coordinates of point to 'points' array
+          points[point_index] = [point._latlng.lat, point._latlng.lng];
+        } else {
+          var vertex = point.options.vertex;
+          poly_state[1][vertex] = point;
+          var inline = point.options.in;
+          var outline = point.options.out;
+          if (inline == undefined) {
+            if (outline != undefined) {
+              var i = 1;
+              while (poly_state[1][vertex + i] == undefined &&
+                  vertex + i < poly_state[1].length)
+                i++;
+              if (vertex + i < poly_state[1].length &&
+                  poly_state[1][vertex + i] != undefined) {
+                outline._latlngs[1] = poly_state[1][vertex + i]._latlng;
+                poly_state[1][vertex + i].options.in = outline;
+                poly_state[0].addLayer(outline);
+                map.addLayer(outline);
+              }
+            }
+          } else {
+            if (outline == undefined) {
+              var i = 1;
+              while (poly_state[1][vertex - i] == undefined &&
+                  vertex - i > 0)
+                i++;
+              if (vertex - i >= 0 &&
+                  poly_state[1][vertex - i] != undefined) {
+                inline._latlngs[0] = poly_state[1][vertex - i]._latlng;
+                poly_state[1][vertex - i].options.out = inline;
+                poly_state[0].addLayer(inline);
+                map.addLayer(inline);
+              }
+            } else {
+              var i = 1;
+              var j = 1;
+              while (poly_state[1][vertex + i] == undefined &&
+                  vertex + i < poly_state[1].length)
+                i++;
+              while (poly_state[1][vertex - j] == undefined &&
+                  vertex - j > 0)
+                j++;
+              if (vertex + i < poly_state[1].length &&
+                  poly_state[1][vertex + i] != undefined) {
+                if (vertex - j >= 0 &&
+                    poly_state[1][vertex - j] != undefined) {
+                  poly_state[0].removeLayer(poly_state[1][vertex + i].options.in);
+                  map.removeLayer(poly_state[1][vertex - j].options.out);
+                  map.removeLayer(poly_state[1][vertex + i].options.in);
+                  inline._latlngs[0] = poly_state[1][vertex - j]._latlng;
+                  inline._latlngs[1] = poly_state[1][vertex]._latlng;
+                  poly_state[1][vertex - j].options.out = inline;
+                  poly_state[1][vertex].options.in = inline;
+                  outline._latlngs[0] = poly_state[1][vertex]._latlng;
+                  outline._latlngs[1] = poly_state[1][vertex + i]._latlng;
+                  poly_state[1][vertex + i].options.in = outline;
+                  poly_state[1][vertex].options.out = outline;
+                  poly_state[0].addLayer(inline);
+                  poly_state[0].addLayer(outline);
+                  map.addLayer(poly_state[0]);
+                }
+              }
+            }
+          }
+        };
         // adding point to layer
         layers[layer_index].addLayer(point);
       }
@@ -1059,6 +1122,7 @@ function undo() {
       change_to(type, marker);
       break; }
   }
+  everytime();
   return true;
 }
 

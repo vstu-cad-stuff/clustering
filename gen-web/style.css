@@ -1,6 +1,6 @@
 /* toolbox */
 
-#tools, #poly_sub, #select_type {
+#tools, #poly_sub, #del_sub, #select_type {
   list-style: none;
   background-color: #fff;
   margin: 0;
@@ -23,7 +23,7 @@
   top: 70px;
 }
 
-#tools li, #poly_sub li, #select_type li {
+#tools li, #poly_sub li, #del_sub li, #select_type li {
   display: inline-block;
   width: 26px;
   padding: 5px 0px;
@@ -38,7 +38,7 @@
   border: 0;
 }
 
-#tools li button, #poly_sub li button, #select_type li button {
+#tools li button, #poly_sub li button, #del_sub li button, #select_type li button {
   border: none;
   padding: none;
   height: 16px;
@@ -48,32 +48,44 @@
   background-size: contain;
 }
 
-#tools li.selected button, #poly_sub li.selected button, #select_type li.selected button {
+#tools li.selected button, #poly_sub li.selected button,
+#del_sub li.selected button, #select_type li.selected button {
   opacity: 1;
 }
 
-#tools li button:hover, #poly_sub li button:hover, #select_type li button:hover {
+#tools li button:hover, #poly_sub li button:hover,
+#del_sub li button:hover, #select_type li button:hover {
   opacity: 1;
 }
 
-#tools li button[disabled]:hover, #poly_sub li button[disabled]:hover, #select_type li button[disabled]:hover {
+#tools li button[disabled]:hover, #poly_sub li button[disabled]:hover,
+#poly_sub li button[disabled]:hover, #select_type li button[disabled]:hover {
   opacity: 0.5;
 }
 
 /* polygon submenu */
 
-#poly_sub {
+#poly_sub, #del_sub {
   height: 26px;
   left: 37px;
-  top: 151px;
   z-index: 1;
   border-top-right-radius: 5px;
   border-bottom-right-radius: 5px;
   visibility: hidden;
 }
 
+#poly_sub {
+  top: 151px;
+}
+
 #poly_sub li{
   border-right: 1px solid #ccc;
+}
+
+/* delete submenu */
+
+#del_sub {
+  top: 205px;
 }
 
 /* select type of points */

@@ -30,8 +30,6 @@ var work_mode = 'select';
 var point_type = 'default';
 // points count, need for spray and uniform modes
 var count = 20;
-// uid - global variable for counting users, userid - string hex uid
-var uid = -1, userid;
 // array of last actions
 var last_actions = [];
 // _leaflet_id of clicked marker
@@ -111,13 +109,6 @@ function everytime() {
     }
   }
   map.contextmenu.hide();
-}
-
-function get_userid() {
-  // increment global uid
-  uid += 1;
-  // return userID
-  return '#' + ('000000' + uid.toString(16)).slice(-6);
 }
 
 function get_type(marker) {
@@ -507,7 +498,7 @@ function onClick(e) {
       /* if clicking on map in 'select' or 'delete' mode
          we should close opened popup */
       map.closePopup();
-      map.contextmenu.hide();
+      everytime();
       break; }
     /* ----- point mode ----- */
     case 'point': {
@@ -769,6 +760,8 @@ function select(option) {
       document.getElementById('input').style.visibility = 'hidden';
       // hide polygon submenu
       document.getElementById('poly_sub').style.visibility = 'hidden';
+      // hide delete submenu
+      document.getElementById('del_sub').style.visibility = 'hidden';
       // hide spray radius changer
       document.getElementById('spray_radius').style.visibility = 'hidden';
       // hide point's type selection menu
@@ -784,6 +777,7 @@ function select(option) {
     case 'point': {
       document.getElementById('input').style.visibility = 'hidden';
       document.getElementById('poly_sub').style.visibility = 'hidden';
+      document.getElementById('del_sub').style.visibility = 'hidden';
       document.getElementById('spray_radius').style.visibility = 'hidden';
       // show point's type selection menu
       document.getElementById('select_type').style.visibility = 'visible';
@@ -799,6 +793,7 @@ function select(option) {
       // show input panel
       document.getElementById('input').style.visibility = 'visible';
       document.getElementById('poly_sub').style.visibility = 'hidden';
+      document.getElementById('del_sub').style.visibility = 'hidden';
       // show spray radius changer
       document.getElementById('spray_radius').style.visibility = 'visible';
       document.getElementById('select_type').style.visibility = 'visible';
@@ -814,6 +809,7 @@ function select(option) {
       document.getElementById('input').style.visibility = 'visible';
       // show polygon submenu
       document.getElementById('poly_sub').style.visibility = 'visible';
+      document.getElementById('del_sub').style.visibility = 'hidden';
       document.getElementById('spray_radius').style.visibility = 'hidden';
       document.getElementById('select_type').style.visibility = 'visible';
       document.getElementById('count').value = count;
@@ -827,6 +823,7 @@ function select(option) {
     case 'bb': {
       document.getElementById('input').style.visibility = 'visible';
       document.getElementById('poly_sub').style.visibility = 'hidden';
+      document.getElementById('del_sub').style.visibility = 'hidden';
       document.getElementById('spray_radius').style.visibility = 'hidden';
       document.getElementById('select_type').style.visibility = 'visible';
       document.getElementById('count').value = count;
@@ -840,6 +837,8 @@ function select(option) {
     case 'delete': {
       document.getElementById('input').style.visibility = 'hidden';
       document.getElementById('poly_sub').style.visibility = 'hidden';
+      // show delete submenu
+      document.getElementById('del_sub').style.visibility = 'visible';
       document.getElementById('spray_radius').style.visibility = 'hidden';
       document.getElementById('select_type').style.visibility = 'hidden';
       document.getElementById('select').className = '';
@@ -880,6 +879,18 @@ function select_type(option) {
   }
 }
 
+// clear map
+function all_clear() {
+  points = [];
+  last_actions = [];
+  for (var i in layers) {
+    if (layers[i] != undefined)
+      map.removeLayer(layers[i]);
+  }
+  layers = [];
+  poly_state = [false, []];
+}
+
 // save function
 function save() {
   everytime();
@@ -918,7 +929,49 @@ function save() {
 // load function
 function load() {
   everytime();
-  /* here will be load function */
+  var input = document.createElement('input');
+  input.setAttribute('type', 'file');
+  input.setAttribute('id', 'input_id');
+  document.body.appendChild(input);
+  input.click();
+  input.addEventListener('change', read, false);
+}
+
+// function for reading file 
+function read() {
+  var input = document.getElementById('input_id');
+  var files = input.files;
+  var file = files[0];
+  var start = 0;
+  var stop = file.size - 1;
+  var reader = new FileReader();
+  // If we use onloadend, we need to check the readyState.
+  reader.onload = function(e) {
+    var string = e.target.result;
+    all_clear();
+    points = string.split('\n');
+    if (points.slice(-1)[0].indexOf(',' == -1))
+      points.splice(-1);
+    layers.push(new L.FeatureGroup());
+    for (var i in points) {
+      points[i] = points[i].split(', ');
+      var type = points[i][0];
+      var lat = parseFloat(points[i][1]);
+      var lng = parseFloat(points[i][2]);
+      points[i][0] = lat;
+      points[i][1] = lng;
+      points[i][2] = type;
+      var marker = draw_marker(type, [lat, lng]);
+      layers[layers.length - 1].addLayer(marker);
+    }
+    last_actions.push(['add', layers.length - 1]);
+    map.addLayer(layers[layers.length - 1]);
+  };
+  
+  blob = file.slice(start, stop + 1);
+  reader.readAsBinaryString(blob);
+  document.body.onfocus = '';
+  document.body.removeChild(input);
 }
 
 // undo function
@@ -1231,6 +1284,7 @@ function poly_ready () {
   }
   // draw markers
   map.addLayer(poly_state[0]);
+  layers.push(layer);
   map.addLayer(layer);
   last_actions.push(['polygon', [poly_state[1], layer]]);
   poly_state[1] = true;

@@ -12,10 +12,6 @@
     <script src="http://cdn.leafletjs.com/leaflet-0.7/leaflet.js" onerror="script_error()"></script>
     <script src="https://rawgit.com/aratcliffe/Leaflet.contextmenu/master/dist/leaflet.contextmenu.js" onerror="script_error()"></script>
     <link onerror="script_error()" rel="stylesheet" href="https://rawgit.com/aratcliffe/Leaflet.contextmenu/master/dist/leaflet.contextmenu.css" />
-<!--     <link rel="stylesheet" href="leaflet.css" />
-    <script src="leaflet.js"></script>
-    <script src="leaflet.contextmenu.js"></script>
-    <link rel="stylesheet" href="leaflet.contextmenu.css" /> -->
     <link rel="stylesheet" href="../main.css" />
     <link rel="stylesheet" href="style.css" />
   </head>
@@ -76,7 +72,6 @@
           style="background-image: url('img/upload.png')"
           onClick="load()"
           title="Load points data"
-          disabled
         />
       </li>
       <li class="last" id="undo">
@@ -93,6 +88,7 @@
           id="poly_cancel"
           style="background-image: url('img/cancel.png')"
           onClick="poly_cancel()"
+          title="Cancel polygon creation"
           disabled
         />
       </li>
@@ -101,12 +97,28 @@
           id="poly_ready"
           style="background-image: url('img/ready.png')"
           onClick="poly_ready()"
+          title="Complete polygon"
           disabled
         />
       </li>
     </ul>
+    <ul id="del_sub">
+      <li id="del_sub_clear">
+        <button
+          id="del_clear"
+          style="background-image: url('img/clear.png')"
+          onClick="all_clear()"
+          title="Clear map"
+        />
+      </li>
+    </ul>
     <div id="spray_radius">
-      <input id="input_radius" type="range" min="0.005" max="0.02" value="0.01" step="0.001" />
+      <input
+        id="input_radius"
+        type="range" value="0.01"
+        min="0.005" max="0.02" step="0.001"
+        title="Change radius of spray"
+      />
     </div>
     <ul id="select_type">
       <li class="selected" id="default">

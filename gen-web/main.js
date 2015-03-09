@@ -945,7 +945,6 @@ function read() {
   var start = 0;
   var stop = file.size - 1;
   var reader = new FileReader();
-  // If we use onloadend, we need to check the readyState.
   reader.onload = function(e) {
     var string = e.target.result;
     all_clear();
@@ -1144,6 +1143,8 @@ function undo() {
       poly_state[1] = options[0];
       var last = poly_state[1].slice(-1)[0];
       var first = poly_state[1][0];
+      if (poly_state[0] != true)
+        map.addLayer(layers[last.options.layer]);
       poly_state[0] = layers[last.options.layer];
       var line = last.options.out;
       poly_state[0].removeLayer(line);

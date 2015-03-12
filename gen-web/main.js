@@ -96,16 +96,30 @@ function everytime() {
     poly_state[0] = false;
     poly_state[1] = [];
   } else {
-    var undef_pos = poly_state[1].slice(0).sort().indexOf(undefined)
-    if (undef_pos > 2) {
-      document.getElementById('poly_ready').disabled = false;
+    var undef_pos = poly_state[1].slice(0).sort().indexOf(undefined);
+    var len = poly_state[1].length;
+    if (undef_pos == -1) {
+      if (len > 2) {
+        document.getElementById('poly_ready').disabled = false;
+      } else {
+        document.getElementById('poly_ready').disabled = true;
+      }
+      if (len > 0) {
+        document.getElementById('poly_cancel').disabled = false;
+      } else {
+        document.getElementById('poly_cancel').disabled = true;
+      }
     } else {
-      document.getElementById('poly_ready').disabled = true;
-    }
-    if (undef_pos > 0) {
-      document.getElementById('poly_cancel').disabled = false;
-    } else {
-      document.getElementById('poly_cancel').disabled = true;
+      if (undef_pos > 2) {
+        document.getElementById('poly_ready').disabled = false;
+      } else {
+        document.getElementById('poly_ready').disabled = true;
+      }
+      if (undef_pos > 0) {
+        document.getElementById('poly_cancel').disabled = false;
+      } else {
+        document.getElementById('poly_cancel').disabled = true;
+      }
     }
   }
   map.contextmenu.hide();

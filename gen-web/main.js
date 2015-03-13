@@ -961,7 +961,6 @@ function read() {
   var reader = new FileReader();
   reader.onload = function(e) {
     var string = e.target.result;
-    all_clear();
     points = string.split('\n');
     if (points.slice(-1)[0].indexOf(',' == -1))
       points.splice(-1);

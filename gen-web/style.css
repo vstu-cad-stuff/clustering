@@ -14,13 +14,13 @@
 
 #tools, #select_type  {
   width: 26px;
-  left: 10px;
   z-index: 3;
   border-radius: 5px;
 }
 
 #tools {
   top: 70px;
+  left: 10px;
 }
 
 #tools li, #poly_sub li, #del_sub li, #select_type li {
@@ -92,6 +92,7 @@
 
 #select_type {
   top: 319px;
+  left: 45px;
   visibility: hidden;
 }
 

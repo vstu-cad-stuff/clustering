@@ -795,6 +795,8 @@ function select(option) {
       document.getElementById('spray_radius').style.visibility = 'hidden';
       // show point's type selection menu
       document.getElementById('select_type').style.visibility = 'visible';
+      // change position of type selection menu
+      document.getElementById('select_type').style.top = 132;
       // select 'point' element
       document.getElementById('select').className = '';
       document.getElementById('point').className = 'selected';
@@ -811,6 +813,7 @@ function select(option) {
       // show spray radius changer
       document.getElementById('spray_radius').style.visibility = 'visible';
       document.getElementById('select_type').style.visibility = 'visible';
+      document.getElementById('select_type').style.top = 159;
       document.getElementById('count').value = count;
       document.getElementById('select').className = '';
       document.getElementById('point').className = '';
@@ -826,6 +829,7 @@ function select(option) {
       document.getElementById('del_sub').style.visibility = 'hidden';
       document.getElementById('spray_radius').style.visibility = 'hidden';
       document.getElementById('select_type').style.visibility = 'visible';
+      document.getElementById('select_type').style.top = 186;
       document.getElementById('count').value = count;
       document.getElementById('select').className = '';
       document.getElementById('point').className = '';
@@ -840,6 +844,7 @@ function select(option) {
       document.getElementById('del_sub').style.visibility = 'hidden';
       document.getElementById('spray_radius').style.visibility = 'hidden';
       document.getElementById('select_type').style.visibility = 'visible';
+      document.getElementById('select_type').style.top = 213;
       document.getElementById('count').value = count;
       document.getElementById('select').className = '';
       document.getElementById('point').className = '';

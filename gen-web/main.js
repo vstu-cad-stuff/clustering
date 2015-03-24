@@ -34,6 +34,8 @@ var count = 20;
 var last_actions = [];
 // _leaflet_id of clicked marker
 var clicked;
+//
+var hide = false;
 // 
 var poly_state = [false, []];
 /* ---------- ------------ --- --------- ---------- */ }
@@ -617,8 +619,7 @@ function onClick(e) {
       var started = false;
       if (!poly_state[0]) {
         // creating new layer for point
-        layers.push(new L.FeatureGroup());
-        poly_state[0] = layers[layers.length - 1];
+        poly_state[0] = new L.FeatureGroup();
         started = true;
         document.getElementById('poly_cancel').disabled = false;
       }
@@ -1309,6 +1310,18 @@ function poly_ready () {
   poly_state[1] = true;
   document.getElementById('poly_cancel').disabled = true;
   document.getElementById('poly_ready').disabled = true;
+}
+
+// hide points
+function hide_points() {
+  hide = !hide;
+  if (hide) {
+    for (i in layers)
+      map.removeLayer(layers[i])
+  } else {
+    for (i in layers)
+      map.addLayer(layers[i])
+  }
 }
 /* ---------- ------- --------- ---------- */ }
 

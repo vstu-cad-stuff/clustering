@@ -714,15 +714,17 @@ function onMarkerDragStart(e) {
   var marker_type = get_type(marker);
   if (work_mode != 'select' &&
       !(work_mode == 'poly' && marker_type == 'handle')) {
-    var layer = marker.options.layer;
-    layers[layer].removeLayer(e.target);
     if (marker_type != 'handle') {
+      var layer = marker.options.layer;
+      layers[layer].removeLayer(e.target);
       marker._latlng.lat = points[marker.options.point][0];
       marker._latlng.lng = points[marker.options.point][1];
+      layers[layer].addLayer(e.target);
     } else {
+      poly_state[0].removeLayer(e.target);
       marker._latlng = marker.ilatlng;
+      poly_state[0].addLayer(e.target);
     }    
-    layers[layer].addLayer(e.target);
   }
 }
 
@@ -1252,7 +1254,8 @@ function poly_ready () {
   poly_state[0].addLayer(line);
   last.options.out = line;
   first.options.in = line;
-  var layer = new L.FeatureGroup();
+  layers.push(new L.FeatureGroup());
+  var layer = layers.slice(-1)[0];
   // parsing input for number
   count = parseInt(document.getElementById('count').value);
   // if wrong number set it to default
@@ -1314,7 +1317,6 @@ function poly_ready () {
   }
   // draw markers
   map.addLayer(poly_state[0]);
-  layers.push(layer);
   map.addLayer(layer);
   last_actions.push(['polygon',
     [poly_state[1], layer, poly_state[0]]]);

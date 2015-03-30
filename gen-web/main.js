@@ -277,16 +277,16 @@ function delete_marker(L_id) {
   var layer = marker.options.layer;
   // variable for last_actions array
   var temp = ['delete', [marker]];
-  // remove marker from layer
-  layers[layer].removeLayer(marker);
   if (type == 'handle') {
+    // remove marker from layer
+    poly_state[0].removeLayer(marker);
     var inline = marker.options.in;
     var outline = marker.options.out;
     var vertex = marker.options.vertex;
     if (inline == undefined) {
       if (outline != undefined) {
         // first point deletion: delete out
-        layers[layer].removeLayer(outline);
+        poly_state[0].removeLayer(outline);
         map.removeLayer(outline);
         var i = 1;
         while (poly_state[1][vertex + i] == undefined &&
@@ -299,7 +299,7 @@ function delete_marker(L_id) {
     } else {
       if (outline == undefined) {
         // last point deletion: delete in
-        layers[layer].removeLayer(inline);
+        poly_state[0].removeLayer(inline);
         map.removeLayer(inline);
         var i = 1;
         while (poly_state[1][vertex - i] == undefined &&
@@ -310,9 +310,9 @@ function delete_marker(L_id) {
           poly_state[1][vertex - i].options.out = undefined;
       } else {
         // middle point deletion: delete one of lines
-        layers[layer].removeLayer(outline);
+        poly_state[0].removeLayer(outline);
         map.removeLayer(outline);
-        layers[layer].removeLayer(inline);
+        poly_state[0].removeLayer(inline);
         map.removeLayer(inline);
         var i = 1;
         var j = 1;
@@ -329,7 +329,7 @@ function delete_marker(L_id) {
             inline._latlngs[1] = poly_state[1][vertex + i]._latlng;
             poly_state[1][vertex - j].options.out = inline;
             poly_state[1][vertex + i].options.in = inline;
-            layers[layer].addLayer(inline);
+            poly_state[0].addLayer(inline);
             map.addLayer(inline);
           } else {
             poly_state[1][vertex + i].options.in = undefined;
@@ -338,25 +338,35 @@ function delete_marker(L_id) {
       }
     }
     poly_state[1][vertex] = undefined;
-  } else {
-    delete points[marker.options.point];
-  }
-  map.removeLayer(marker);
-  // getting layer._layers properties
-  var props = Object.getOwnPropertyNames(layers[layer]._layers);
-  // if layer._layers does not have any properties
-  if (!props.length) {
-    // if we delete layer, add it to last_actions item
-    temp[1][1] = layers[layer];
-    // remove layer from the map
-    map.removeLayer(layers[layer]);
-    // and the 'layers' array
-    delete layers[layer];
-    if (type == 'handle') {
+    map.removeLayer(marker);
+    // getting poly_state[0]._layers properties
+    var props = Object.getOwnPropertyNames(poly_state[0]._layers);
+    // if poly_state[0]._layers does not have any properties
+    if (!props.length) {
+      // if we delete layer, add it to last_actions item
+      temp[1][1] = poly_state[0];
+      // remove layer from the map
+      map.removeLayer(poly_state[0]);
       poly_state[0] = false;
       poly_state[1] = [];
       document.getElementById('poly_cancel').disabled = true;
       document.getElementById('poly_ready').disabled = true;
+    }
+  } else {
+    // remove marker from layer
+    layers[layer].removeLayer(marker);
+    delete points[marker.options.point];
+    map.removeLayer(marker);
+    // getting layer._layers properties
+    var props = Object.getOwnPropertyNames(layers[layer]._layers);
+    // if layer._layers does not have any properties
+    if (!props.length) {
+      // if we delete layer, add it to last_actions item
+      temp[1][1] = layers[layer];
+      // remove layer from the map
+      map.removeLayer(layers[layer]);
+      // and the 'layers' array
+      delete layers[layer];
     }
   }
   return temp;
@@ -1163,8 +1173,8 @@ function undo() {
       var last = poly_state[1].slice(-1)[0];
       var first = poly_state[1][0];
       if (poly_state[0] != true)
-        map.addLayer(layers[last.options.layer]);
-      poly_state[0] = layers[last.options.layer];
+        map.addLayer(options[2]);
+      poly_state[0] = options[2];
       var line = last.options.out;
       poly_state[0].removeLayer(line);
       map.removeLayer(line);
@@ -1306,7 +1316,8 @@ function poly_ready () {
   map.addLayer(poly_state[0]);
   layers.push(layer);
   map.addLayer(layer);
-  last_actions.push(['polygon', [poly_state[1], layer]]);
+  last_actions.push(['polygon',
+    [poly_state[1], layer, poly_state[0]]]);
   poly_state[1] = true;
   document.getElementById('poly_cancel').disabled = true;
   document.getElementById('poly_ready').disabled = true;

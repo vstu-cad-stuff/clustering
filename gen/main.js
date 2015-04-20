@@ -6,10 +6,6 @@ if (error) {
   document.getElementById("error").style.visibility = "visible";
 }
 
-// center of map
-var lat = (bd[0] + bd[2]) / 2;
-var lon = (bd[1] + bd[3]) / 2;
-
 // open many popups at the same time
 L.Map = L.Map.extend({
   openPopup: function(popup) {
@@ -21,7 +17,7 @@ L.Map = L.Map.extend({
 });
 
 // create map
-var map = L.map('map').setView([lat, lon], 13)    
+var map = L.map('map').setView([48.7941, 44.8009], 13)    
 L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
   attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
 }).addTo(map);

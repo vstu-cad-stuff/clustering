@@ -102,25 +102,25 @@ function everytime() {
     var len = poly_state[1].length;
     if (undef_pos == -1) {
       if (len > 2) {
-        document.getElementById('poly_ready').disabled = false;
+        document.getElementById('button_polygon_ready').disabled = false;
       } else {
-        document.getElementById('poly_ready').disabled = true;
+        document.getElementById('button_polygon_ready').disabled = true;
       }
       if (len > 0) {
-        document.getElementById('poly_cancel').disabled = false;
+        document.getElementById('button_polygon_cancel').disabled = false;
       } else {
-        document.getElementById('poly_cancel').disabled = true;
+        document.getElementById('button_polygon_cancel').disabled = true;
       }
     } else {
       if (undef_pos > 2) {
-        document.getElementById('poly_ready').disabled = false;
+        document.getElementById('button_polygon_ready').disabled = false;
       } else {
-        document.getElementById('poly_ready').disabled = true;
+        document.getElementById('button_polygon_ready').disabled = true;
       }
       if (undef_pos > 0) {
-        document.getElementById('poly_cancel').disabled = false;
+        document.getElementById('button_polygon_cancel').disabled = false;
       } else {
-        document.getElementById('poly_cancel').disabled = true;
+        document.getElementById('button_polygon_cancel').disabled = true;
       }
     }
   }
@@ -349,8 +349,8 @@ function delete_marker(L_id) {
       map.removeLayer(poly_state[0]);
       poly_state[0] = false;
       poly_state[1] = [];
-      document.getElementById('poly_cancel').disabled = true;
-      document.getElementById('poly_ready').disabled = true;
+      document.getElementById('button_polygon_cancel').disabled = true;
+      document.getElementById('button_polygon_ready').disabled = true;
     }
   } else {
     // remove marker from layer
@@ -631,7 +631,7 @@ function onClick(e) {
         // creating new layer for point
         poly_state[0] = new L.FeatureGroup();
         started = true;
-        document.getElementById('poly_cancel').disabled = false;
+        document.getElementById('button_polygon_cancel').disabled = false;
       }
       // creating marker
       var marker = draw_marker('handle', [lat, lng]);
@@ -666,7 +666,7 @@ function onClick(e) {
       marker.options.vertex = poly_state[1].length;
       poly_state[1].push(marker);
       if (poly_state[1].length > 2)
-        document.getElementById('poly_ready').disabled = false;
+        document.getElementById('button_polygon_ready').disabled = false;
       // and draw it on map
       map.addLayer(poly_state[0]);
       break; }
@@ -1188,10 +1188,10 @@ function undo() {
       poly_state[0].removeLayer(options[1]);
       map.removeLayer(options[1]);
       break; }
-    case 'poly_cancel': {
-      /* 'poly_cancel' type: return cancelled polygon.
+    case 'button_polygon_cancel': {
+      /* 'button_polygon_cancel' type: return cancelled polygon.
          Element structure:
-           ['poly_cancel', poly_state[0], poly_state[1]] */
+           ['button_polygon_cancel', poly_state[0], poly_state[1]] */
       var layer = action[1];
       var handles = action[2];
       poly_state[0] = layer;
@@ -1216,12 +1216,12 @@ function poly_cancel() {
   everytime();
   if (poly_state[0]) {
     map.removeLayer(poly_state[0]);
-    last_actions.push(['poly_cancel', poly_state[0], poly_state[1]]);
+    last_actions.push(['button_polygon_cancel', poly_state[0], poly_state[1]]);
     poly_state[0] = false;
     poly_state[1] = [];
   }
-  document.getElementById('poly_cancel').disabled = true;
-  document.getElementById('poly_ready').disabled = true;
+  document.getElementById('button_polygon_cancel').disabled = true;
+  document.getElementById('button_polygon_ready').disabled = true;
 }
 
 // create points inside the current polygon
@@ -1321,8 +1321,8 @@ function poly_ready () {
   last_actions.push(['polygon',
     [poly_state[1], layer, poly_state[0]]]);
   poly_state[1] = true;
-  document.getElementById('poly_cancel').disabled = true;
-  document.getElementById('poly_ready').disabled = true;
+  document.getElementById('button_polygon_cancel').disabled = true;
+  document.getElementById('button_polygon_ready').disabled = true;
 }
 
 // hide points
@@ -1335,6 +1335,9 @@ function hide_points() {
     for (i in layers)
       map.addLayer(layers[i])
   }
+}
+
+function hide_points_desc() {
 }
 /* ---------- ------- --------- ---------- */ }
 

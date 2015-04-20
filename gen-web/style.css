@@ -1,6 +1,6 @@
 /* toolbox */
 
-#tools, #poly_sub, #del_sub, #select_type {
+#menu_tools, #menu_polygon, #menu_delete, #menu_type {
   list-style: none;
   background-color: #fff;
   margin: 0;
@@ -12,33 +12,34 @@
   position: absolute;
 }
 
-#tools, #select_type  {
+#menu_tools, #menu_type, #checkbox_wrap  {
   width: 26px;
   z-index: 3;
   border-radius: 5px;
 }
 
-#tools {
+#menu_tools {
   top: 70px;
   left: 10px;
 }
 
-#tools li, #poly_sub li, #del_sub li, #select_type li {
+#menu_tools li, #menu_polygon li, #menu_delete li, #menu_type li {
   display: inline-block;
   width: 26px;
   padding: 5px 0px;
   margin: 0;
 }
 
-#tools li, #select_type li {
+#menu_tools li, #menu_type li {
   border-bottom: 1px solid #ccc;
 }
 
-#tools li.last, #poly_sub li.last, #select_type li.last {
+#menu_tools li.last, #menu_polygon li.last, #menu_type li.last {
   border: 0;
 }
 
-#tools li button, #poly_sub li button, #del_sub li button, #select_type li button {
+#menu_tools li button, #menu_polygon li button,
+#menu_delete li button, #menu_type li button {
   border: none;
   padding: none;
   height: 16px;
@@ -48,24 +49,25 @@
   background-size: contain;
 }
 
-#tools li.selected button, #poly_sub li.selected button,
-#del_sub li.selected button, #select_type li.selected button {
+#menu_tools li.selected button, #menu_polygon li.selected button,
+#menu_delete li.selected button, #menu_type li.selected button {
   opacity: 1;
 }
 
-#tools li button:hover, #poly_sub li button:hover,
-#del_sub li button:hover, #select_type li button:hover {
+#menu_tools li button:hover, #menu_polygon li button:hover,
+#menu_delete li button:hover, #menu_type li button:hover {
   opacity: 1;
 }
 
-#tools li button[disabled]:hover, #poly_sub li button[disabled]:hover,
-#poly_sub li button[disabled]:hover, #select_type li button[disabled]:hover {
+#menu_tools li button[disabled]:hover,
+#menu_polygon li button[disabled]:hover,
+#menu_type li button[disabled]:hover {
   opacity: 0.5;
 }
 
 /* polygon submenu */
 
-#poly_sub, #del_sub {
+#menu_polygon, #menu_delete {
   height: 26px;
   left: 37px;
   z-index: 1;
@@ -74,23 +76,23 @@
   visibility: hidden;
 }
 
-#poly_sub {
+#menu_polygon {
   top: 151px;
 }
 
-#poly_sub li{
+#menu_polygon li{
   border-right: 1px solid #ccc;
 }
 
 /* delete submenu */
 
-#del_sub {
+#menu_delete {
   top: 205px;
 }
 
 /* select type of points */
 
-#select_type {
+#menu_type {
   top: 319px;
   left: 45px;
   visibility: hidden;
@@ -98,22 +100,25 @@
 
 /* spray area radius */
 
-#spray_radius {
+#menu_spray, #wrap_checkbox {
   height: 26px;
-  left: 37px;
-  top: 124px;
   position: absolute;
   background-color: #fff;
   box-shadow: 0 1px 5px rgba(0, 0, 0, .65);
   text-align: center;
   overflow: hidden;
   z-index: 1;
-  border-top-right-radius: 5px;
-  border-bottom-right-radius: 5px;
-  visibility: hidden;
+  /*visibility: hidden;*/
 }
 
-#spray_radius input {
+#menu_spray {
+  left: 37px;
+  top: 124px;
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
+}
+
+#menu_spray input {
   margin: 11px 5px;
 	-webkit-appearance: none;
 	background-color: #ccc;
@@ -138,9 +143,25 @@ input[type="range"]::-webkit-slider-thumb:hover {
 	background: #000;
 }
 
+#wrap_checkbox {
+  left: 10px;
+  top: 321px;
+}
+
+#wrap_checkbox input {
+  margin: 6px 5px;
+	height: 15px;
+	width: 15px;
+}
+
+#wrap_checkbox label {
+  height: 16px;
+  font-size: 12pt;
+}
+
 /* points count input panel */
 
-#input {
+#wrap_input {
   display: block;
   text-align: center;
   width: 220px;
@@ -158,6 +179,6 @@ input[type="range"]::-webkit-slider-thumb:hover {
   font-size: 12pt;
 }
 
-#input input {
+#wrap_input input {
   text-align: center;
 }

@@ -11,23 +11,13 @@
   </head>
   <body>
     <!--   создаем массивы для точек и центроидов   -->
-    <script type="text/javascript">c = []; p = []; pd = []</script>
+    <script type="text/javascript">c = []; p = []</script>
     <!------------------------------------------------>
-    <div id="left">
-      <span class="label" id="cur"></span>
-      <br /><br />
-      <input type="button" id="larrow" value="&#8592;" onClick="time_rem()" disabled />
-      <input type="tel" id="time" value="0" onInput="time_set()"/>
-      <input type="button" id="rarrow" value="&#8594;" onClick="time_add()" /><br /><br />
-      <span class="label" id="comment"></span>
-    </div>
-    <input type="button" id="hide" value="&#8656;" onClick="hide()">
     <div id="map"></div>
     <div id="cover"><a href="/clustering">back</a></div>
     <!-- считываем данные из файлов -->
-    <script src="data_c.js"></script>
-    <script src="data_pc.js"></script>
-    <script src="data_p.js"></script>
+    <script src="centers.js"></script>
+    <script src="points.js"></script>
     <!-------------------------------->
     <script src="main.js"></script>
   </body>

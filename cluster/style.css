@@ -1,50 +1,8 @@
-#left {
-  position: absolute;
-  left: 0;
-  top: 45%;
-  width: 150px;
-  text-align: center;
-}
-
-.label {
-  display: inline-block;
-  width: 90%;
-}
-
-#larrow, #rarrow, #time {
-  margin: 0 3px;
-}
-
-#time {
-  width: 25%;
-  text-align: center;
-}
-
 #map {
   position: absolute;
-  left: 150px;
+  left: 0;
   top: 0;
   bottom: 0;
-  width: calc(100% - 152px);
+  width: 100%;
   z-index: 0;
-  border-left: 2px solid #000;
-}
-
-#larrow, #rarrow {
-  font-weight: bold;
-  width: 20%;
-}
-
-#hide {
-  left: 162px;
-  top: 70px;
-  width: 26px;
-  height: 26px;
-  position: absolute;
-  z-index: 10;
-  background-color: #fff;
-  border: none;
-  border-radius: 5px;
-  box-shadow: 0 0 5px rgba(0, 0, 0, .6);
-  font-weight: bold;
 }

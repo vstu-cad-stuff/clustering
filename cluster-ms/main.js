@@ -44,6 +44,10 @@ var circles; // слой для быстрой очистки
 draw = function() {
   circles = new L.FeatureGroup(); // обнуляем слой
 
+  for (var i in c) {
+      c[i][2] = NaN
+  }
+
   console.time('readingP');
   for (var i in p) {   // считываем точки
     var lat = p[i][0]; // широта
@@ -62,7 +66,8 @@ draw = function() {
   console.timeEnd('readingP');
   console.time('readingC');
 
-  for (i in c) {   // считываем точки центроидов отправки
+  for (var i in c) {   // считываем точки центроидов
+    if (isNaN(c[i][2])) continue;
     lat = c[i][0];
     lon = c[i][1];
     ctr = i;

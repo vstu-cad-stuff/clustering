@@ -38,57 +38,118 @@ var colors = [
   '#dabd13', '#394991', '#ba8910', '#eab478', '#be8378'
 ];
 
-var circles; // слой для быстрой очистки
+rotate = function(a, b, c) {
+    return (b[1] - a[1]) * (c[0] - b[0]) - (b[0] - a[0]) * (c[1] - b[1]);
+}
+  
+range = function(start, end) {
+    var s = [];
+    if (!end) {
+        end = start;
+        start = 0;
+    }
+    for (var i = start; i < end; i++) {
+        s.push(i);
+    }
+    return s;
+}
 
-// функция отрисовки
+jarvis = function(a) {
+  n = a.length;
+  p = range(n);
+  
+  for (var i in range(1, n)) {
+    if (a[p[i]][1] < a[p[0]][1])
+      p[i] = p[0] + (p[0] = p[i], 0);
+  }
+  
+  h = [p[0]];
+  p.splice(0, 1);
+  p.push(h[0]);
+  while (true) {
+    right = 0;
+    len = p.length;
+    for (var i in range(1, len + 1)) {
+      if (rotate(a[h[h.length - 1]], a[p[right]], a[p[i]]) < 0)
+        right = i;
+    }
+    if (p[right] == h[0]) {
+      break;
+    } else {
+      h.push(p[right]);
+      p.splice(right, 1);
+    }
+  }
+  return h
+}
+
+hull = function(a, b) {  
+  var h = [];
+  for (var i in a)
+    h.push(b[a[i]]);
+  return h;
+}
+
+Cluster = (function() {
+  function Cluster(lat, lon, list) {
+    this.lat = lat;
+    this.lon = lon;
+    this.list = list || [];
+    this.pop = this.list.length;
+  }
+  
+  Cluster.prototype.addPoint = function(lat, lon) {
+    this.list.push([lat, lon]);
+    this.pop = this.list.length;
+  }
+  
+  return Cluster;
+})();
+
+clusters = [];
+
+for (var i in c) {
+  var lat = c[i][0];
+  var lon = c[i][1];
+  clusters.push(new Cluster(lat, lon));
+}
+
+for (var i in p) {
+  var lat = p[i][0];
+  var lon = p[i][1];
+  var ctr = p[i][2];
+  clusters[ctr].addPoint(lat, lon);
+}
+
+var circles;
+
 draw = function() {
-  circles = new L.FeatureGroup(); // обнуляем слой
-
-  for (var i in c) {
-      c[i][2] = NaN
-  }
-
-  console.time('readingP');
-  for (var i in p) {   // считываем точки
-    var lat = p[i][0]; // широта
-    var lon = p[i][1]; // долгота
-    var ctr = p[i][2]; // принадлежность центроиду
-    c[ctr][2] = (isNaN(c[ctr][2]) ? 0 : c[ctr][2] + 1);
-    var circle = L.circleMarker([lat, lon], { // создаем маркер
-        color: colors[ctr % colors.length],
-        radius: 3,
-        weight: 1
-      }).addTo(map).bindPopup(lat + ', ' + lon +
-        '<br />belongs to cluster ' + ctr); // добавляем к нему popup
-    circles.addLayer(circle); // добавляем маркер на слой circles
-  }
-
-  console.timeEnd('readingP');
-  console.time('readingC');
-
-  for (var i in c) {   // считываем точки центроидов
-    if (isNaN(c[i][2])) continue;
-    lat = c[i][0];
-    lon = c[i][1];
-    ctr = i;
-    circle = L.circleMarker([lat, lon], {
-        color: colors[ctr % colors.length],
-        radius: 3.5 + (isNaN(c[ctr][2]) ? 0 : Math.log(c[ctr][2]) / Math.log(2) * 2),
-        opacity: 0.8,
-        fillOpacity: 0.6
-      }).addTo(map).bindPopup('<b>Cluster ' + ctr +
-      '</b><br />has ' + (isNaN(c[ctr][2]) ? 0 : c[ctr][2]) +
-      ' points<br />' + lat + ', ' + lon);
+  circles = new L.FeatureGroup();
+  
+  for (k in clusters) {
+    var h = hull(jarvis(clusters[k].list), clusters[k].list);
+    var polygon = new L.polygon(h, {
+      color: colors[k % colors.length],
+      opacity: 0.6,
+      fillOpacity: 0.2,
+      weight: 2
+    }).addTo(map).bindPopup('Population of cluster #' + k + ': ' +
+      clusters[k].pop);
+      
+    var circle = new L.circleMarker([clusters[k].lat, clusters[k].lon], {
+        color: colors[k % colors.length],
+        radius: 3 + Math.pow(clusters[k].pop, 1 / 3) * 2,
+        opacity: 0.9,
+        fillOpacity: 0.4
+      }).addTo(map).bindPopup('<b>Cluster #' + k + '</b> at ' +
+        lat + ', ' + lon + '<br />Has ' +
+        clusters[k].pop + ' points');
+ 
+    circles.addLayer(polygon);
     circles.addLayer(circle);
   }
 
-  console.timeEnd('readingC');
-  console.time('draw');
-
-  map.addLayer(circles); // отрисовываем слой circles на карте
-
-  console.timeEnd('draw');
+  map.addLayer(circles);
 }
 
-// отрисовываем первую итерацию
 draw();

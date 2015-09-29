@@ -10,14 +10,39 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <!--   создаем массивы для точек и центроидов   -->
-    <script type="text/javascript">c = []; p = []</script>
+    <!--   create arrays for points and clusters   -->
+    <script type="text/javascript">ec = []; ep = []; rc = []; rp = []</script>
     <!------------------------------------------------>
     <div id="map"></div>
     <div id="cover"><a href="/clustering">back</a></div>
-    <!-- считываем данные из файлов -->
-    <script src="centers.js"></script>
-    <script src="points.js"></script>
+    <!-- read data -->
+    <script src="e_centers.js"></script>
+    <script src="e_points.js"></script>
+    <script src="r_centers.js"></script>
+    <script src="r_points.js"></script>
+    <!-------------------------------->
+    <ul id="metrics">
+      <li id="euli">
+        <button
+          onClick="select('e')"
+          title="Euclid metric"
+        >Eu</button>
+      </li>
+      <li class="last" id="roli">
+        <button
+          onClick="select('r')"
+          title="Route metric"
+        >Ro</button>
+      </li>
+    </ul>
+    <div id="TARDIS">
+      <input
+        id="slidebar"
+        type="range" value="0"
+        min="0" step="1"
+        title="Change visualization time"
+      />
+    </div>
     <!-------------------------------->
     <script src="main.js"></script>
   </body>

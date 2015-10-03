@@ -7,6 +7,61 @@
   z-index: 0;
 }
 
+#metrics, #methods {
+    list-style: none;
+    background-color: #fff;
+    margin: 0;
+    padding: 0;
+    box-shadow: 0 1px 5px rgba(0, 0, 0, .65);
+    text-align: center;
+    overflow: hidden;
+    font-size: 0;
+    position: absolute;
+    width: 26px;
+    left: 10px;
+    z-index: 3;
+    border-radius: 5px;
+    top: 70px;
+}
+
+#metrics {
+    top: 130px;
+}
+
+#metrics li, #methods li {
+    display: inline-block;
+    width: 26px;
+    padding: 5px 0px;
+    margin: 0;
+    border-bottom: 1px solid #ccc;
+}
+
+#metrics li.last, #methods li.last {
+    border: 0;
+}
+
+#metrics li button, #methods li button {
+    border: 0;
+    padding: 0;
+    height: 16px;
+    width: 16px;
+    background-color: #fff;
+    background-size: contain;
+    opacity: 1;
+    font-size: 6pt;
+    vertical-align: middle;
+    text-align: center;
+    opacity: .5;
+}
+
+#metrics li button:hover, #methods li button:hover {
+    opacity: 1;
+}
+
+#metrics li button.selected, #methods li button.selected {
+    opacity: 1;
+}
+
 #TARDIS {
   height: 30px;
   width: 200px;
@@ -44,46 +99,4 @@ input[type="range"]::-webkit-slider-thumb {
 
 input[type="range"]::-webkit-slider-thumb:hover {
 	background: #000;
-}
-
-#metrics {
-    list-style: none;
-    background-color: #fff;
-    margin: 0;
-    padding: 0;
-    box-shadow: 0 1px 5px rgba(0, 0, 0, .65);
-    text-align: center;
-    overflow: hidden;
-    font-size: 0;
-    position: absolute;
-    width: 26px;
-    left: 10px;
-    z-index: 3;
-    border-radius: 5px;
-    top: 70px;
-}
-
-#metrics li {
-    display: inline-block;
-    width: 26px;
-    padding: 5px 0px;
-    margin: 0;
-    border-bottom: 1px solid #ccc;
-}
-
-#metrics li.last {
-    border: 0;
-}
-
-#metrics li button {
-    border: 0;
-    padding: 0;
-    height: 16px;
-    width: 16px;
-    background-color: #fff;
-    background-size: contain;
-    opacity: 1;
-    font-size: 6pt;
-    vertical-align: middle;
-    text-align: center;
 }

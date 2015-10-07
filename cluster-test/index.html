@@ -1,0 +1,69 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <title>An example of k-means work</title>
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7/leaflet.css" />
+    <link href='http://fonts.googleapis.com/css?family=PT+Sans:400,700' rel='stylesheet' type='text/css'>
+    <script src="http://cdn.leafletjs.com/leaflet-0.7/leaflet.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../main.css" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <!------------------------------------------------>
+    <div id="map"></div>
+    <div id="cover"><a href="/clustering">back</a></div>
+    <!-- read data -->
+    <script src="kmeuc.js"></script>
+    <script src="kmeup.js"></script>
+    <script src="kr_centers.js"></script>
+    <script src="kr_points.js"></script>
+    <script src="me_centers.js"></script>
+    <script src="me_points.js"></script>
+    <script src="mr_centers.js"></script>
+    <script src="mr_points.js"></script>
+    <!-------------------------------->
+    <ul id="methods">
+      <li id="kmli">
+        <button
+          id="kmbt"
+          onClick="select('km')"
+          title="K-Means algorithm"
+        >KM</button>
+      </li>
+      <li class="last" id="msli">
+        <button
+          id="mebt"
+          onClick="select('ms')"
+          title="Mean Shift algorithm"
+        >MS</button>
+      </li>
+    </ul>
+    <ul id="metrics">
+      <li id="euli">
+        <button
+          id="eucbt"
+          onClick="select('euc')"
+          title="Euclid metric"
+        >Eu</button>
+      </li>
+      <li class="last" id="roli">
+        <button
+          id="roubt"
+          onClick="select('rou')"
+          title="Route metric"
+        >Ro</button>
+      </li>
+    </ul>
+    <div id="TARDIS">
+      <input
+        id="slidebar"
+        type="range" value="0"
+        min="0" step="1"
+        title="Change visualization time"
+      />
+    </div>
+    <!-------------------------------->
+    <script src="main.js"></script>
+  </body>
+</html>

@@ -7,7 +7,7 @@
   z-index: 0;
 }
 
-#metrics, #methods {
+#metrics {
     list-style: none;
     background-color: #fff;
     margin: 0;
@@ -24,11 +24,7 @@
     top: 70px;
 }
 
-#metrics {
-    top: 130px;
-}
-
-#metrics li, #methods li {
+#metrics li {
     display: inline-block;
     width: 26px;
     padding: 5px 0px;
@@ -36,11 +32,11 @@
     border-bottom: 1px solid #ccc;
 }
 
-#metrics li.last, #methods li.last {
+#metrics li.last {
     border: 0;
 }
 
-#metrics li button, #methods li button {
+#metrics li button {
     border: 0;
     padding: 0;
     height: 16px;
@@ -54,11 +50,11 @@
     opacity: .5;
 }
 
-#metrics li button:hover, #methods li button:hover {
+#metrics li button:hover {
     opacity: 1;
 }
 
-#metrics li button.selected, #methods li button.selected {
+#metrics li button.selected {
     opacity: 1;
 }
 

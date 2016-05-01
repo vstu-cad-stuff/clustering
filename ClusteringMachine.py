@@ -1,6 +1,7 @@
 import geojson as json
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 
 class ClusteringMachine():
     """ General class for clustering machine.
@@ -85,6 +86,12 @@ class ClusteringMachine():
         """
         cc = map(lambda x, y: (np.append(x, y)).tolist(), self.cluster_centers, self.population)
         try:
+            path = os.path.dirname(filename)
+            if path == '':
+                pass
+            else:
+                if not (os.path.exists(path)):
+                     os.makedirs(os.path.dirname(filename))
             with open(filename, 'w') as file_:
                 json.dump(cc, file_)
         except IOError as e:
@@ -112,6 +119,12 @@ class ClusteringMachine():
             X_[i][2] = self.labels[i]
 
         try:
+            path = os.path.dirname(filename)
+            if path == '':
+                pass
+            else:
+                if not (os.path.exists(path)):
+                     os.makedirs(os.path.dirname(filename))
             with open(filename, 'w') as file_:
                 json.dump(X_.tolist(), file_)
         except IOError as e:

@@ -1,6 +1,7 @@
 import random
 import geojson as json
 import numpy as np
+import os
 
 class InitMachine():
     """ Initializes centers of clusters.
@@ -96,6 +97,12 @@ class InitMachine():
         Uses JSON data format.
         """
         try:
+            path = os.path.dirname(filename)
+            if path == '':
+                pass
+            else:
+                if not (os.path.exists(path)):
+                     os.makedirs(os.path.dirname(filename))
             with open(filename, 'w') as file_:
                 json.dump(self.centers.tolist(), file_)
         except IOError as e:

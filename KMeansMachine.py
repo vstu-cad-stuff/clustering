@@ -2,6 +2,7 @@ from __future__ import division
 import geojson as json
 import time
 import numpy as np
+import os
 from routelib import route
 from InitMachine import InitMachine
 from ClusteringMachine import ClusteringMachine
@@ -114,7 +115,7 @@ class KMeans():
 
     def dxc(self, x, c):
         try:
-            return self._dxc(c, x)
+            return self._dxc[c][x]
         except:
             return -1.
 
@@ -159,7 +160,7 @@ class KMeans():
             print('\n  calculating s(c)')
             s = [0.5 * min(d[int(c[2])][int(c[2])+1:] + d[int(c[2])][:int(c[2])]) for c in C]
             # for each point
-            print('loop on X')
+            print('  loop on X')
             for i in range(x_len):
                 dist, clus = self.dist(X[i], C[0], metric) if self.dxc(i, 0) < 0 else self.dxc(i, 0), C[0]
                 self._dxc[0][i] = dist
@@ -204,21 +205,38 @@ class KMeans():
                             lower[cc][x] = self._dxc[cc][x]
                             if self.dxc(x, cc) < self.dxc(x, cx):
                                 l_curr[x] = cc
-                                arrays[cx] = np.setdiff1d(arrays[cx], [X[x]])
+                                try:
+                                    nz = np.nonzero(arrays[cx] == X[x])[0]
+                                    for i in nz:
+                                        if np.array_equal(arrays[cx][i], X[x]):
+                                            arrays[cx] = np.delete(arrays[cx], i, 0)
+                                            break
+                                except:
+                                    print('  Not find {} in {}'.format(X[x], arrays[cx]))
+                                    pass
                                 cx = int(l_curr[x])
                                 arrays[cx] = np.append(arrays[cx], [X[x]], axis=0)
             # equate the previous and current centers of clusters
             print('\n  endloop')
             c_old = C
             if self.log:
+                if self.log is not True:
+                    path = '{}'.format(self.log)
+                else:
+                    path = 'km_{}'.format(metric[:2])
+                if path == '':
+                    path = '.'
+                else:
+                    if not (os.path.exists(path)):
+                         os.makedirs(path)
                 cc = C
                 cc = map(lambda x, y: (np.append(x, y)).tolist(), cc, p_curr)
-                filename = 'km_{}/{}_centers_{}.js'.format(metric[:2], metric[0], iteration)
+                filename = '{}/{}_centers_{}.js'.format(path, metric[0], iteration)
                 dump(cc, filename)
 
                 xc = X
                 xc = map(lambda x, y: (np.append(x, y)).tolist(), xc, l_curr)
-                filename = 'km_{}/{}_points_{}.js'.format(metric[:2], metric[0], iteration)
+                filename = '{}/{}_points_{}.js'.format(path, metric[0], iteration)
                 dump(xc, filename)
 
             # array for calculated centers of clusters
@@ -244,12 +262,12 @@ class KMeans():
                     lower[c][x] = max([lower[c][x] - dist[c], 0])
                     upper[x] = upper[x] + dist[int(l_curr[x])]
                     r[x] = True
-            print('\n  endloop')
+            print('  endloop')
             # equate current centroids to calculated
             C = mu
             # increment iteration counter
             iteration += 1
-            print('  iter end: {:.2f}k distance calculations'.format(self.icntr / 1000))
+            print('  iter end: {:.2f}k distance calculations\n'.format(self.icntr / 1000))
             self.icntr = 0
         print('Overall distance calculations: {}'.format(self.cntr))
         # record results

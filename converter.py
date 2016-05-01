@@ -32,19 +32,19 @@ def hull(a, b):
         h.append(b[i])
     return h
 
-last = 24
+last = 49
+log = 'common'
 metric = 'route'
-method = 'kmeans'
-filecen = 'krc.js'
-filepoi = 'krp.js'
+filecen = '{}_{}c.js'.format(log, metric[0])
+filepoi = '{}_{}p.js'.format(log, metric[0])
 
 centers = []
 hulls = []
 
 File = open(filecen, 'w')
-File.write('{}{}c = '.format(method[0], metric[0]))
+File.write('{}_{}c = '.format(log[:3], metric[0]))
 for i in range(last + 1):
-    filec = '{}_{}/{}_centers_{}.js'.format(method[:2], metric[:2], metric[0], i)
+    filec = '{}/{}_centers_{}.js'.format(log, metric[0], i)
     with open(filec, 'r') as file_:
         center = json.load(file_)
         print('readed c#' + str(i))
@@ -53,9 +53,9 @@ json.dump(centers, File)
 File.close()
 
 File = open(filepoi, 'w')
-File.write('{}{}p = '.format(method[0], metric[0]))
+File.write('{}_{}p = '.format(log[:3], metric[0]))
 for i in range(last + 1):
-    filep = '{}_{}/{}_points_{}.js'.format(method[:2], metric[:2], metric[0], i)
+    filep = '{}/{}_points_{}.js'.format(log, metric[0], i)
     with open(filep, 'r') as file_:
         points = json.load(file_)
         print('readed p#' + str(i))

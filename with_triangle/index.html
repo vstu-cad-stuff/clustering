@@ -1,0 +1,80 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <title>An example of k-means work</title>
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7/leaflet.css" />
+    <link href='http://fonts.googleapis.com/css?family=PT+Sans:400,700' rel='stylesheet' type='text/css'>
+    <script src="http://cdn.leafletjs.com/leaflet-0.7/leaflet.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../main.css" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <!------------------------------------------------>
+    <div id="map"></div>
+    <div id="cover"><a href="/clustering">back</a></div>
+    <!-- read data -->
+    <script src="common/common_ec.js"></script>
+    <script src="common/common_ep.js"></script>
+    <script src="common/common_rc.js"></script>
+    <script src="common/common_rp.js"></script>
+    <script src="railway/railway_ec.js"></script>
+    <script src="railway/railway_ep.js"></script>
+    <script src="railway/railway_rc.js"></script>
+    <script src="railway/railway_rp.js"></script>
+    <script src="river/river_ec.js"></script>
+    <script src="river/river_ep.js"></script>
+    <script src="river/river_rc.js"></script>
+    <script src="river/river_rp.js"></script>
+    <!-------------------------------->
+    <ul id="metrics">
+      <li id="euli">
+        <button
+          id="eucbt"
+          onClick="select('euc')"
+          title="Euclid metric"
+        >Eu</button>
+      </li>
+      <li class="last" id="roli">
+        <button
+          id="roubt"
+          onClick="select('rou')"
+          title="Route metric"
+        >Ro</button>
+      </li>
+    </ul>
+    <ul id="tests">
+      <li id="comli">
+        <button
+          id="combt"
+          onClick="change('common')"
+          title="Common test"
+        >Cm</button>
+      </li>
+      <li id="rlwli">
+        <button
+          id="raibt"
+          onClick="change('railway')"
+          title="Railway test"
+        >Rw</button>
+      </li>
+      <li class="last" id="rivli">
+        <button
+          id="rivbt"
+          onClick="change('river')"
+          title="River test"
+        >Rv</button>
+      </li>
+    </ul>
+    <div id="TARDIS">
+      <input
+        id="slidebar"
+        type="range" value="0"
+        min="0" step="1"
+        title="Change visualization time"
+      />
+    </div>
+    <!-------------------------------->
+    <script src="main.js"></script>
+  </body>
+</html>

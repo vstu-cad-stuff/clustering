@@ -55,6 +55,7 @@ class KMeans():
     population_ = None
     log = False
     route_ = None
+    _dxc = None
     cntr = 0
     icntr = 0
 
@@ -93,7 +94,7 @@ class KMeans():
         text = '{:.2f}k'.format(self.cntr / 1000)
         digits = len(text)
         delete = '\r' * digits
-        print('{0}{1}'.format(delete, text), end='')
+        print('{0}{1}'.format(delete, text), end=',')
         return r
 
     def stop(self, iter, old, new):
@@ -117,6 +118,29 @@ class KMeans():
             return True
         return np.array_equal(old, new)
 
+    def dxc(self, x, c):
+        try:
+            return self._dxc[c][x]
+        except:
+            return -1.
+
+    """def xloop(self, i):
+        dist, clus = self.dist(X[i], C[0], metric) if self.dxc(i, 0) < 0 else self.dxc(i, 0), C[0]
+        self._dxc[0][i] = dist
+        lower[0][i] = dist
+        for c in C[1:]:
+            cc = int(c[2])
+            cl = int(clus[2])
+            if d[cc][cl] < 2 * dist:
+                dist, clus = self.dist(X[i], c, metric) if self.dxc(i, 0) < 0 else self.dxc(i, 0), c
+                cl = int(clus[2])
+                self._dxc[cl][i] = dist
+                lower[cl][i] = dist
+        n = int(clus[2])
+        l_curr[i] = n
+        p_curr[n] += 1
+        arrays[n] = np.append(arrays[n], [X[i]], axis=0)"""
+
     def fit(self, X, C, metric):
         """ Perform clustering.
 
@@ -124,7 +148,7 @@ class KMeans():
         ----------
         X : array, [n_points, n_dimensions]
             Coordinates of points.
-        centroids : array, [n_clusters, n_dimensions + 1]
+        C : array, [n_clusters, n_dimensions + 1]
             Centers of clusters.
         """
         # set initial parameters
@@ -135,34 +159,90 @@ class KMeans():
         x_len = len(X)
         print('Now {} points will be clustering to {} clusters'.format(x_len, c_len))
 
-        L = np.empty([x_len])
+        lower = np.zeros([c_len, x_len]) # l(c, x)
+        upper = np.empty([x_len]) # u(x)
+        r = np.full([x_len], True) # r(x)
+        self._dxc = np.full([c_len, x_len], -1) # d(c, x)
+        l_curr = np.empty([x_len]) # c(x)
 
         if metric == 'route':
             self.route_.start()
         # while clustering isn't completed
         while not self.stop(iteration, c_old, C):
             # reset population in clusters
-            P = np.zeros([c_len])
+            p_curr = np.zeros([c_len])
             # show iteration number
-            print('iteration {}'.format(iteration + 1))
+            print('Iteration {:02d}'.format(iteration + 1))
             # create empty python array
             # each item will contain all the points belongs to specific cluster
-            arrays = [np.empty([0, 2]) for i in range(c_len)]
+            arrays = [np.empty([0, 2]) for each in C]
+            # calc distances between centers
+            print('  calculating d(c, c'')')
+            d = [list(map(lambda b: self.dist(a, b, metric), C)) for a in C]
+            print('\n  calculating s(c)')
+            s = [0.5 * min(d[int(c[2])][int(c[2])+1:] + d[int(c[2])][:int(c[2])]) for c in C]
             # for each point
+            print('  loop on X')
+            """result = async_worker(range(x_len), xloop)
+            print(result)
+            exit()"""
             for i in range(x_len):
-                # calculate distance between point and all the clusters centers
-                distances = [(self.dist(X[i], C[each], metric), each) for
-                    each in range(c_len)]
-                # sort distances ascending
-                distances.sort(key=lambda x: x[0])
-                # pick number of cluster, which center has the smallest
-                # distance to point
-                m = distances[0][1]
-                # set label of point
-                L[i] = C[m][2]
-                P[m] += 1
-                arrays[m] = np.append(arrays[m], [X[i]], axis=0)
+                dist, clus = self.dist(X[i], C[0], metric) if self.dxc(i, 0) < 0 else self.dxc(i, 0), C[0]
+                self._dxc[0][i] = dist
+                lower[0][i] = dist
+                for c in C[1:]:
+                    cc = int(c[2])
+                    cl = int(clus[2])
+                    if d[cc][cl] < 2 * dist:
+                        dist, clus = self.dist(X[i], c, metric) if self.dxc(i, 0) < 0 else self.dxc(i, 0), c
+                        cl = int(clus[2])
+                        self._dxc[cl][i] = dist
+                        lower[cl][i] = dist
+                n = int(clus[2])
+                l_curr[i] = n
+                p_curr[n] += 1
+                arrays[n] = np.append(arrays[n], [X[i]], axis=0)
+            print('\n  endloop')
+            print('  upper loop on X')
+            for i in range(x_len):
+                upper[i] = min([x for x in list(zip(*self._dxc))[i] if x >= 0])
+            print('  endloop')
+            op = []
+            print('  op loop on X')
+            for i in range(x_len):
+                if upper[i] > s[int(l_curr[i])]:
+                    op.append(i)
+            print('  endloop')
+            print('  loop on op')
+            for x in op:
+                cx = int(l_curr[x])
+                for c in C:
+                    cc = int(c[2])
+                    if c is not C[cx] and upper[x] > lower[cc][x] and upper[x] > 0.5 * d[cc][cx]:
+                        if r[x]:
+                            self._dxc[cx][x] = self.dist(X[x], C[cx], metric)
+                            lower[cx][x] = self._dxc[cx][x]
+                            r[x] = False
+                        else:
+                            self._dxc[cx][x] = upper[x]
+                        if self.dxc(x, cx) > lower[cc][x] or self.dxc(x, cx) > 0.5 * d[cc][cx]:
+                            self._dxc[cc][x] = self.dist(X[x], c, metric)
+                            lower[cc][x] = self._dxc[cc][x]
+                            if self.dxc(x, cc) < self.dxc(x, cx):
+                                l_curr[x] = cc
+                                try:
+                                    nz = np.nonzero(arrays[cx] == X[x])[0]
+                                    for i in nz:
+                                        if np.array_equal(arrays[cx][i], X[x]):
+                                            arrays[cx] = np.delete(arrays[cx], i, 0)
+                                            break
+                                except:
+                                    print('  Not find {} in {}'.format(X[x], arrays[cx]))
+                                    pass
+                                cx = int(l_curr[x])
+                                arrays[cx] = np.append(arrays[cx], [X[x]], axis=0)
             # equate the previous and current centers of clusters
+            print('\n  endloop')
             c_old = C
             if self.log:
                 if self.log is not True:
@@ -175,12 +255,12 @@ class KMeans():
                     if not (os.path.exists(path)):
                          os.makedirs(path)
                 cc = C
-                cc = list(map(lambda x, y: (np.append(x, y)).tolist(), cc, P))
+                cc = list(map(lambda x, y: (np.append(x, y)).tolist(), cc, p_curr))
                 filename = '{}/{}_centers_{}.js'.format(path, metric[0], iteration)
                 dump(cc, filename)
 
                 xc = X
-                xc = list(map(lambda x, y: (np.append(x, y)).tolist(), xc, L))
+                xc = list(map(lambda x, y: (np.append(x, y)).tolist(), xc, l_curr))
                 filename = '{}/{}_points_{}.js'.format(path, metric[0], iteration)
                 dump(xc, filename)
 
@@ -192,12 +272,22 @@ class KMeans():
             i = 0
             while i < c_len:
                 # if it contains points
-                if P[i] != 0:
+                if p_curr[i] != 0:
                     # calculate center of cluster
                     mu[i] = np.append(np.mean(arrays[i], axis=0), i)
                 else:
                     mu[i] = C[i]
                 i += 1
+
+            print('  calculating d(c, mu(c))')
+            dist = [self.dist(C[c], mu[c], metric) for c in range(c_len)]
+            print('\n  loop on c, x')
+            for c in range(c_len):
+                for x in range(x_len):
+                    lower[c][x] = max([lower[c][x] - dist[c], 0])
+                    upper[x] = upper[x] + dist[int(l_curr[x])]
+                    r[x] = True
+            print('  endloop')
             # equate current centroids to calculated
             C = mu
             # increment iteration counter
@@ -207,8 +297,8 @@ class KMeans():
         print('Overall distance calculations: {}'.format(self.cntr))
         # record results
         self.cluster_centers_ = C
-        self.labels_ = L
-        self.population_ = P
+        self.labels_ = l_curr
+        self.population_ = p_curr
         if metric == 'route':
             self.route_.stop()
 

@@ -1,6 +1,8 @@
 from DataCollector import DataCollector
-from KMeansMachine import KMeansClusteringMachine
+from KMeansMachine import KMeansClusteringMachine as kmeans
+from KMeansMachineTriangle import KMeansClusteringMachine as kmeans_triangle
 
+USE_TRIANGLE_INEQUALITY = False
 datafile = 'data/data_common_pts.txt'
 init = 'file'
 filename = 'data/data_common_cls.txt'
@@ -16,7 +18,10 @@ dc.uploadFromTextFile(datafile, delimiter=',')
 X = dc.getData()
 
 # create KMeansClusteringMachine object with specified parameters
-km = KMeansClusteringMachine(X, init=init, filename=filename, max_iter=max_iter, log=log)
+if USE_TRIANGLE_INEQUALITY:
+    km = kmeans_triangle(X, init=init, filename=filename, max_iter=max_iter, log=log)
+else:
+    km = kmeans(X, init=init, filename=filename, max_iter=max_iter, log=log)
 # perform clustering
 km.fit(metric)
 # print info

@@ -3,12 +3,14 @@ from KMeansMachine import KMeansClusteringMachine as kmeans
 from KMeansMachineTriangle import KMeansClusteringMachine as kmeans_triangle
 
 USE_TRIANGLE_INEQUALITY = False
-datafile = 'data/data_common_pts.txt'
+test = 'railway' # full, few, common, river, railway
+metric = 'route' # route, surface, euclid
+
+datafile = 'data/data_{}_pts.txt'.format(test)
 init = 'file'
-filename = 'data/data_common_cls.txt'
-log = 'common'
+filename = 'data/data_{}_cls.txt'.format(test)
+log = test
 max_iter = 50
-metric = 'route'
 
 # create DataCollector object
 dc = DataCollector()

@@ -299,7 +299,9 @@ class KMeans():
         self.cluster_centers_ = C
         self.labels_ = l_curr
         self.population_ = p_curr
+        self.sleeping = 0
         if metric == 'route':
+            self.sleeping = self.route_.sleep
             self.route_.stop()
 
 class KMeansClusteringMachine(ClusteringMachine):
@@ -401,7 +403,7 @@ class KMeansClusteringMachine(ClusteringMachine):
         # perform clustering
         self.cluster_instance.fit(self.X, self.cluster_centers, metric)
         # calculate time
-        self.fit_time = time.time() - t_start
+        self.fit_time = time.time() - t_start - self.cluster_instance.sleeping
         # get points labels
         self.labels = self.cluster_instance.labels_
         # get clusters population

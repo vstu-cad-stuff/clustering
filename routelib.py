@@ -37,11 +37,12 @@ class route():
     """
     osrm = None
     API = 5
+    sleep = 5
 
     def start(self, loud=False):
         """ Start local OSRM machine.
 
-        Needs time to start, contains a 5 seconds sleep statement.
+        Needs time to start, contains a sleep statement.
 
         You can have one running machine per instance of class.
 
@@ -52,7 +53,7 @@ class route():
             else:
                 osrm = subprocess.Popen('osrm-routed ~/map/map.osrm > /dev/null', shell=True)
             self.osrm = osrm
-        time.sleep(5)
+        time.sleep(self.sleep)
         a = [44.27, 48.41]
         url = 'http://localhost:5000/nearest/v1/car/{},{}'.format(*a[::-1])
         responce = urlopen(url)

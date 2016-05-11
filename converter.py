@@ -32,9 +32,9 @@ def hull(a, b):
         h.append(b[i])
     return h
 
-last = 7
-log = 'common'
-metric = 'route'
+last = 1 # last iteration number
+log = 'river' # common, river, railway
+metric = 'route' # route, euclid, surface
 filecen = '{}_{}c.js'.format(log, metric[0])
 filepoi = '{}_{}p.js'.format(log, metric[0])
 

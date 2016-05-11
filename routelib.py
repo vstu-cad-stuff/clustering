@@ -1,8 +1,23 @@
 import time
 import json
 import subprocess
-from urllib import urlopen
 import numpy as np
+
+from sys import version_info as vinfo
+PYTHON2 = True
+if vinfo[0] > 2:
+    PYTHON2 = False
+
+if PYTHON2:
+    from urllib import urlopen
+else:
+    from urllib.request import urlopen
+
+class OSRMError(Exception):
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)
 
 class route():
     """ A class for getting distance between points by finding a route.
@@ -21,8 +36,9 @@ class route():
 
     """
     osrm = None
+    API = 5
 
-    def start(self):
+    def start(self, loud=False):
         """ Start local OSRM machine.
 
         Needs time to start, contains a 5 seconds sleep statement.
@@ -31,9 +47,93 @@ class route():
 
         """
         if self.osrm is None:
-            osrm = subprocess.Popen('osrm-routed ~/map/map.osrm > /dev/null', shell=True)
+            if loud:
+                osrm = subprocess.Popen('osrm-routed ~/map/map.osrm', shell=True)
+            else:
+                osrm = subprocess.Popen('osrm-routed ~/map/map.osrm > /dev/null', shell=True)
             self.osrm = osrm
         time.sleep(5)
+        a = [44.27, 48.41]
+        url = 'http://localhost:5000/nearest/v1/car/{},{}'.format(*a[::-1])
+        responce = urlopen(url)
+        if not PYTHON2:
+            responce = responce.readall().decode('utf-8')
+            data = json.loads(responce)
+        else:
+            data = json.load(responce)
+        try:
+            code = data['code']
+            self.API = 5
+        except KeyError:
+            self.API = 4
+
+    def viaroute(self, a, b):
+        if self.osrm is None:
+            raise OSRMError('OSRM not started!')
+
+        # API v4 uses [lat, lon] coordinates
+        # API v5 uses [lon, lat] coordinates
+
+        # send request to find route between points
+        if self.API == 4:
+            url = "http://localhost:5000/viaroute?loc={},{}&loc={},{}" \
+                "&geometry=false&alt=false".format(*np.append(a, b))
+        elif self.API == 5:
+            url = 'http://localhost:5000/route/v1/car/{},{};{},{}?overview=false' \
+                '&alternatives=false&steps=false'.format(*np.append(a[::-1], b[::-1]))
+
+        # get responce
+        responce = urlopen(url)
+        # parse json
+        if not PYTHON2:
+            responce = responce.readall().decode('utf-8')
+            data = json.loads(responce)
+        else:
+            data = json.load(responce)
+
+        # if route isn't found
+        if self.API == 4:
+            if data['status'] is not 0:
+                raise OSRMError('Error routing: {}'.format(data['status_message']))
+            else:
+                return data['route_summary']['total_distance']
+        elif self.API == 5:
+            if data['code'] != 'Ok':
+                raise OSRMError('Error routing: {}'.format(data['message']))
+            else:
+                return data['routes'][0]['distance']
+
+    def locate(self, a):
+        if self.osrm is None:
+            raise OSRMError('OSRM not started!')
+
+        if self.API == 4:
+            loc = 'http://localhost:5000/locate?loc={},{}'.format(*a)
+        elif self.API == 5:
+            loc = 'http://localhost:5000/nearest/v1/car/{},{}'.format(*a[::-1])
+        l_resp = urlopen(loc)
+        if not PYTHON2:
+            l_resp = l_resp.readall().decode('utf-8')
+            l_data = json.loads(l_resp)
+        else:
+            l_data = json.load(l_resp)
+        # if can't locate
+        if self.API == 4:
+            if l_data['status'] is not 0:
+                # stop osrm machine
+                self.stop()
+                # throw error
+                raise OSRMError('Error locating: {}'.format(l_data['status_message']))
+            else:
+                return l_data['mapped_coordinate']
+        elif self.API == 5:
+            if l_data['code'] is not u'Ok':
+                # stop osrm machine
+                self.stop()
+                # throw error
+                raise OSRMError('Error locating: {}'.format(l_data['message']))
+            else:
+                return l_data['waypoints'][0]['location'][::-1]
 
     def route_distance(self, a, b):
         """ Get distance between points.
@@ -53,6 +153,10 @@ class route():
             Route distance between given points.
 
         """
+
+        if self.osrm is None:
+            raise OSRMError('OSRM not started!')
+
         dist = None
         # if shape of given arrays isn't (0:2)
         if a.shape[0] == 1:
@@ -60,64 +164,30 @@ class route():
         if b.shape[0] == 1:
             b = np.array([b[0][0], b[0][1]])
 
-        c = map(lambda i: np.round(i, decimals=5), a)
-        d = map(lambda i: np.round(i, decimals=5), b)
+        a, b = a[:2], b[:2]
 
-        if dist is None:
-            if np.array_equal(c, d):
-                # if points are the same return zero
-                dist = 0.0
-            else:
-                # send request to find route between points
-                url = "http://localhost:5000/viaroute?loc={},{}&loc={},{}" \
-                    "&geometry=false&alt=false".format(*np.append(a, b))
-                # get responce
-                responce = urlopen(url)
-                # parse json
-                data = json.load(responce)
+        c = list(map(lambda i: np.round(i, decimals=5), a))
+        d = list(map(lambda i: np.round(i, decimals=5), b))
 
-                # if route isn't found
-                if data['status'] is not 0:
-                    # locate first point
-                    loc = 'http://localhost:5000/locate?loc={},{}'.format(*a)
-                    l_resp = urlopen(loc)
-                    l_data = json.load(l_resp)
-                    # if can't locate
-                    if l_data['status'] is not 0:
-                        # stop osrm machine
-                        self.stop()
-                        # throw error
-                        raise ValueError(l_data['status_message'])
-                    else:
-                        first = l_data['mapped_coordinate']
+        if np.array_equal(c, d):
+            # if points are the same return zero
+            dist = 0.0
+        else:
+            # send request to find route between points
+            try:
+                dist = self.viaroute(a, b)
+            except OSRMError:
+                # locate first point
+                c = self.locate(a)
+                c = list(map(lambda i: np.round(i, decimals=5), c))
+                # locate second point
+                d = self.locate(b)
+                d = list(map(lambda i: np.round(i, decimals=5), d))
 
-                    # locate second point
-                    loc = 'http://localhost:5000/locate?loc={},{}'.format(*b)
-                    l_resp = urlopen(loc)
-                    l_data = json.load(l_resp)
-                    if l_data['status'] is not 0:
-                        self.stop()
-                        raise ValueError(l_data['status_message'])
-                    else:
-                        second = l_data['mapped_coordinate']
-
-                    e = map(lambda i: np.round(i, decimals=5), first)
-                    f = map(lambda i: np.round(i, decimals=5), second)
-
-                    if dist is None:
-                        # try to find route between located points
-                        url = "http://localhost:5000/viaroute?loc={},{}&loc={},{}" \
-                            "&geometry=false&alt=false".format(*np.append(first, second))
-                        responce = urlopen(url)
-                        data = json.load(responce)
-                        if data['status'] is not 0:
-                            self.stop()
-                            raise ValueError(data['status_message'])
-                        else:
-                            # if route is found return distance
-                            dist = data['route_summary']['total_distance']
+                if np.array_equal(c, d):
+                    dist = 0.0
                 else:
-                    dist = data['route_summary']['total_distance']
+                    dist = self.viaroute(c, d)
         return dist
 
     def stop(self):

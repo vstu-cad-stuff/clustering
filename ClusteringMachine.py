@@ -84,7 +84,7 @@ class ClusteringMachine():
         -----
         Uses JSON data format.
         """
-        cc = map(lambda x, y: (np.append(x, y)).tolist(), self.cluster_centers, self.population)
+        cc = list(map(lambda x, y: (np.append(x, y)).tolist(), self.cluster_centers, self.population))
         try:
             path = os.path.dirname(filename)
             if path == '':

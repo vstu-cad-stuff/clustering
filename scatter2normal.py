@@ -20,4 +20,4 @@ for entry in data:
 with open ('{}_cls.txt'.format('.'.join(filename.split('.')[:-1])), 'w') as f:
     f.write(str(clusters))
 with open ('{}_pts.txt'.format('.'.join(filename.split('.')[:-1])), 'w') as f:
-    f.write('\n'.join(map(lambda x: '{},{}'.format(x[0], x[1]), points)))
+    f.write('\n'.join(list(map(lambda x: '{},{}'.format(x[0], x[1]), points))))

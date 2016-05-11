@@ -1,13 +1,14 @@
-from __future__ import division
+from __future__ import division, print_function
 import geojson as json
 import time
 import numpy as np
 import os
+
 from routelib import route
 from InitMachine import InitMachine
 from ClusteringMachine import ClusteringMachine
-from multiprocessing.dummy import Pool as ThreadPool
 
+from multiprocessing.dummy import Pool as ThreadPool
 POOL = ThreadPool(processes=4)
 
 def async_worker(iterator, func, data):
@@ -82,14 +83,16 @@ class KMeans():
             r = self.route_.route_distance(a, b)
         elif metric == 'euclid':
             r = np.sqrt((b[0] - a[0]) ** 2 + (b[1] - a[1]) ** 2)
+        elif metric == 'mikowski':
+            r = np.sqrt((b[0] - a[0]) ** 2 + (b[1] - a[1]) ** 2)
         else:
             raise ValueError('Unknown metric: {}'.format(metric))
         self.cntr += 1
         self.icntr += 1
-        text = '{:.2f}'.format(self.cntr / 1000) + 'k'
+        text = '{:.2f}k'.format(self.cntr / 1000)
         digits = len(text)
-        delete = "\r" * digits
-        print "{0}{1}".format(delete, text),
+        delete = '\r' * digits
+        print('{0}{1}'.format(delete, text), end=',')
         return r
 
     def stop(self, iter, old, new):
@@ -156,7 +159,7 @@ class KMeans():
             arrays = [np.empty([0, 2]) for each in C]
             # calc distances between centers
             print('  calculating d(c, c'')')
-            d = [map(lambda b: self.dist(a, b, metric), C) for a in C]
+            d = [list(map(lambda b: self.dist(a, b, metric), C)) for a in C]
             print('\n  calculating s(c)')
             s = [0.5 * min(d[int(c[2])][int(c[2])+1:] + d[int(c[2])][:int(c[2])]) for c in C]
             # for each point
@@ -180,7 +183,7 @@ class KMeans():
             print('\n  endloop')
             print('  upper loop on X')
             for i in range(x_len):
-                upper[i] = min([x for x in zip(*self._dxc)[i] if x >= 0])
+                upper[i] = min([x for x in list(zip(*self._dxc))[i] if x >= 0])
             print('  endloop')
             op = []
             print('  op loop on X')
@@ -230,12 +233,12 @@ class KMeans():
                     if not (os.path.exists(path)):
                          os.makedirs(path)
                 cc = C
-                cc = map(lambda x, y: (np.append(x, y)).tolist(), cc, p_curr)
+                cc = list(map(lambda x, y: (np.append(x, y)).tolist(), cc, p_curr))
                 filename = '{}/{}_centers_{}.js'.format(path, metric[0], iteration)
                 dump(cc, filename)
 
                 xc = X
-                xc = map(lambda x, y: (np.append(x, y)).tolist(), xc, l_curr)
+                xc = list(map(lambda x, y: (np.append(x, y)).tolist(), xc, l_curr))
                 filename = '{}/{}_points_{}.js'.format(path, metric[0], iteration)
                 dump(xc, filename)
 

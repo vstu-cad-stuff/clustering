@@ -6,7 +6,7 @@ def rotate(a, b, c):
 
 def jarvis(a):
     n = len(a)
-    p = range(n)
+    p = list(range(n))
     for i in range(1,n):
         if a[p[i]][1] < a[p[0]][1]:
             p[i], p[0] = p[0], p[i]
@@ -32,7 +32,7 @@ def hull(a, b):
         h.append(b[i])
     return h
 
-last = 49
+last = 7
 log = 'common'
 metric = 'route'
 filecen = '{}_{}c.js'.format(log, metric[0])

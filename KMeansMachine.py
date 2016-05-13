@@ -9,14 +9,14 @@ from InitMachine import InitMachine
 from ClusteringMachine import ClusteringMachine
 
 from multiprocessing.dummy import Pool as ThreadPool
-POOL = ThreadPool(processes=4)
+POOL = ThreadPool(processes=10)
 
-def async_worker(iterator, func):
+def async_worker(iterator, func, data=None):
     thread_list = []
     result = []
     for item in iterator:
         # create job for new_route function
-        thread = POOL.apply_async(func, item)
+        thread = POOL.apply_async(func, (item, data))
         # add thread in list
         thread_list.append(thread)
     for thread in thread_list:
@@ -117,6 +117,23 @@ class KMeans():
             return True
         return np.array_equal(old, new)
 
+    def cloop(self, i, j):
+        return (self.dist(self.X[i], self.C[j], self.metric), j)
+
+    def xloop(self, i, _=None):
+        # calculate distance between point and all the clusters centers
+        D = list(map(lambda j: self.cloop(i, j), range(self.c_len)))
+        # D = list(POOL.map(lambda j: self.cloop(i, j), range(self.c_len)))
+        # sort distances ascending
+        D.sort(key=lambda x: x[0])
+        # pick number of cluster, which center has the smallest
+        # distance to point
+        m = D[0][1]
+        # set label of point
+        self.L[i] = self.C[m][2]
+        self.P[m] += 1
+        self.A[m] = np.append(self.A[m], [self.X[i]], axis=0)
+
     def fit(self, X, C, metric):
         """ Perform clustering.
 
@@ -124,93 +141,87 @@ class KMeans():
         ----------
         X : array, [n_points, n_dimensions]
             Coordinates of points.
-        centroids : array, [n_clusters, n_dimensions + 1]
+        C : array, [n_clusters, n_dimensions + 1]
             Centers of clusters.
         """
         # set initial parameters
         iteration = 0
         c_old = None
         # get length of lists
-        c_len = len(C)
-        x_len = len(X)
-        print('Now {} points will be clustering to {} clusters'.format(x_len, c_len))
+        self.c_len = len(C)
+        self.x_len = len(X)
+        print('Now {} points will be clustering to {} clusters'.format(self.x_len, self.c_len))
 
-        L = np.empty([x_len])
+        self.L = np.empty([self.x_len])
+        self.C = C
+        self.X = X
+        self.P = None
+        self.A = None
+        self.metric = metric
 
-        if metric == 'route':
+        if self.metric == 'route':
             self.route_.start()
         # while clustering isn't completed
-        while not self.stop(iteration, c_old, C):
+        while not self.stop(iteration, c_old, self.C):
             # reset population in clusters
-            P = np.zeros([c_len])
+            self.P = np.zeros([self.c_len])
             # show iteration number
             print('iteration {}'.format(iteration + 1))
             # create empty python array
             # each item will contain all the points belongs to specific cluster
-            arrays = [np.empty([0, 2]) for i in range(c_len)]
+            self.A = [np.empty([0, 2]) for i in range(self.c_len)]
             # for each point
-            for i in range(x_len):
-                # calculate distance between point and all the clusters centers
-                distances = [(self.dist(X[i], C[each], metric), each) for
-                    each in range(c_len)]
-                # sort distances ascending
-                distances.sort(key=lambda x: x[0])
-                # pick number of cluster, which center has the smallest
-                # distance to point
-                m = distances[0][1]
-                # set label of point
-                L[i] = C[m][2]
-                P[m] += 1
-                arrays[m] = np.append(arrays[m], [X[i]], axis=0)
+            res = async_worker(range(self.x_len), self.xloop)
+            # res = list(POOL.map(self.xloop, range(self.x_len)))
+            # res = list(map(self.xloop, range(self.x_len)))
             # equate the previous and current centers of clusters
-            c_old = C
+            c_old = self.C
             if self.log:
                 if self.log is not True:
                     path = '{}'.format(self.log)
                 else:
-                    path = 'km_{}'.format(metric[:2])
+                    path = 'km_{}'.format(self.metric[:2])
                 if path == '':
                     path = '.'
                 else:
                     if not (os.path.exists(path)):
                          os.makedirs(path)
-                cc = C
-                cc = list(map(lambda x, y: (np.append(x, y)).tolist(), cc, P))
-                filename = '{}/{}_centers_{}.js'.format(path, metric[0], iteration)
+                cc = self.C
+                cc = list(map(lambda x, y: (np.append(x, y)).tolist(), cc, self.P))
+                filename = '{}/{}_centers_{}.js'.format(path, self.metric[0], iteration)
                 dump(cc, filename)
 
-                xc = X
-                xc = list(map(lambda x, y: (np.append(x, y)).tolist(), xc, L))
-                filename = '{}/{}_points_{}.js'.format(path, metric[0], iteration)
+                xc = self.X
+                xc = list(map(lambda x, y: (np.append(x, y)).tolist(), xc, self.L))
+                filename = '{}/{}_points_{}.js'.format(path, self.metric[0], iteration)
                 dump(xc, filename)
 
             # array for calculated centers of clusters
-            print('  calculating mu')
-            mu = np.empty([c_len, 3])
+            mu = np.empty([self.c_len, 3])
 
             # for each cluster
             i = 0
-            while i < c_len:
+            while i < self.c_len:
                 # if it contains points
-                if P[i] != 0:
+                if self.P[i] != 0:
                     # calculate center of cluster
-                    mu[i] = np.append(np.mean(arrays[i], axis=0), i)
+                    mu[i] = np.append(np.mean(self.A[i], axis=0), i)
                 else:
-                    mu[i] = C[i]
+                    mu[i] = self.C[i]
                 i += 1
             # equate current centroids to calculated
-            C = mu
+            self.C = mu
             # increment iteration counter
             iteration += 1
-            print('  iter end: {:.2f}k distance calculations\n'.format(self.icntr / 1000))
+            print('\n  iter end: {:.2f}k distance calculations\n'.format(self.icntr / 1000))
             self.icntr = 0
         print('Overall distance calculations: {}'.format(self.cntr))
         # record results
-        self.cluster_centers_ = C
-        self.labels_ = L
-        self.population_ = P
+        self.cluster_centers_ = self.C
+        self.labels_ = self.L
+        self.population_ = self.P
         self.sleeping = 0
-        if metric == 'route':
+        if self.metric == 'route':
             self.sleeping = self.route_.sleep
             self.route_.stop()
 

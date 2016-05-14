@@ -72,7 +72,7 @@ class InitMachine():
         with open(filename, 'r') as file_:
             centers = json.load(file_)
         for i in centers:
-            centers[int(i[2])] = np.array(i, dtype='object')
+            centers[int(i[2])] = np.array(i[:3], dtype='object')
             centers[int(i[2])][0] = float(centers[int(i[2])][0])
             centers[int(i[2])][1] = float(centers[int(i[2])][1])
             centers[int(i[2])][2] = int(centers[int(i[2])][2])

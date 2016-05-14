@@ -32,46 +32,47 @@ def hull(a, b):
         h.append(b[i])
     return h
 
-last = 49 # last iteration number - 1
-log = 'few' # few, full, common, river, railway
-metric = 'route' # route, euclid, surface
-filecen = '{}_{}c.js'.format(log, metric[0])
-filepoi = '{}_{}p.js'.format(log, metric[0])
+if __name__ == '__main__':
+    last = 50 # last iteration number
+    log = 'common' # few, full, common, river, railway
+    metric = 'route' # route, euclid, surface
+    filecen = '{}_{}c.js'.format(log, metric[0])
+    filepoi = '{}_{}p.js'.format(log, metric[0])
 
-centers = []
-hulls = []
+    centers = []
+    hulls = []
 
-File = open(filecen, 'w')
-File.write('{}_{}c = '.format(log[:3], metric[0]))
-for i in range(last + 1):
-    filec = '{}/{}_centers_{}.js'.format(log, metric[0], i)
-    with open(filec, 'r') as file_:
-        center = json.load(file_)
-        print('readed c#' + str(i))
-        centers.append(center)
-json.dump(centers, File)
-File.close()
+    File = open(filecen, 'w')
+    File.write('{}_{}c = '.format(log[:3], metric[0]))
+    for i in range(1, last + 1):
+        filec = '{}/{}_centers_{}.js'.format(log, metric[0], i)
+        with open(filec, 'r') as file_:
+            center = json.load(file_)
+            print('readed c#' + str(i))
+            centers.append(center)
+    json.dump(centers, File)
+    File.close()
 
-File = open(filepoi, 'w')
-File.write('{}_{}p = '.format(log[:3], metric[0]))
-for i in range(last + 1):
-    filep = '{}/{}_points_{}.js'.format(log, metric[0], i)
-    with open(filep, 'r') as file_:
-        points = json.load(file_)
-        print('readed p#' + str(i))
-    mx = int(max(map(lambda k: k[2], points))) + 1
-    ps = [np.empty([0, 3]) for each in range(0, mx)]
-    for j in points:
-        b = int(j[2])
-        ps[b] = np.append(ps[b], [j], axis=0)
-    this_hulls = []
-    for j in ps:
-        try:
-            print('Calculating hull of {} points for cluster {}'.format(len(j), j[0][2]))
-            h = hull(jarvis(j), j.tolist())
-            this_hulls.append(h)
-        except IndexError:
-            pass
-    hulls.append(this_hulls)
-json.dump(hulls, File)
-File.close()
+    File = open(filepoi, 'w')
+    File.write('{}_{}p = '.format(log[:3], metric[0]))
+    for i in range(1, last + 1):
+        filep = '{}/{}_points_{}.js'.format(log, metric[0], i)
+        with open(filep, 'r') as file_:
+            points = json.load(file_)
+            print('readed p#' + str(i))
+        mx = int(max(map(lambda k: k[2], points))) + 1
+        ps = [np.empty([0, 3]) for each in range(0, mx)]
+        for j in points:
+            b = int(j[2])
+            ps[b] = np.append(ps[b], [j], axis=0)
+        this_hulls = []
+        for j in ps:
+            try:
+                print('Calculating hull of {} points for cluster {}'.format(len(j), j[0][2]))
+                h = hull(jarvis(j), j.tolist())
+                this_hulls.append(h)
+            except IndexError:
+                pass
+        hulls.append(this_hulls)
+    json.dump(hulls, File)
+    File.close()

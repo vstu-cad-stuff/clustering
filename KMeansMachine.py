@@ -9,7 +9,7 @@ from InitMachine import InitMachine
 from ClusteringMachine import ClusteringMachine
 
 from multiprocessing.dummy import Pool as ThreadPool
-POOL = ThreadPool(processes=10)
+POOL = ThreadPool(processes=4)
 
 def async_worker(iterator, func, data=None):
     thread_list = []
@@ -90,7 +90,7 @@ class KMeans():
             raise ValueError('Unknown metric: {}'.format(metric))
         self.cntr += 1
         self.icntr += 1
-        text = '{:.2f}k'.format(self.cntr / 1000)
+        text = '      progress: {:.2f}k / {:.2f}k'.format(self.icntr / 1000, self.x_len * self.c_len / 1000)
         digits = len(text)
         delete = '\r' * digits
         print('{0}{1}'.format(delete, text), end='')
@@ -163,14 +163,16 @@ class KMeans():
             self.route_.start()
         # while clustering isn't completed
         while not self.stop(iteration, c_old, self.C):
+            time_start = time.time()
             # reset population in clusters
             self.P = np.zeros([self.c_len])
             # show iteration number
-            print('iteration {}'.format(iteration + 1))
+            print('Iteration {}'.format(iteration + 1))
             # create empty python array
             # each item will contain all the points belongs to specific cluster
             self.A = [np.empty([0, 2]) for i in range(self.c_len)]
             # for each point
+            print('  assigning points')
             res = async_worker(range(self.x_len), self.xloop)
             # res = list(POOL.map(self.xloop, range(self.x_len)))
             # res = list(map(self.xloop, range(self.x_len)))
@@ -188,17 +190,18 @@ class KMeans():
                          os.makedirs(path)
                 cc = self.C
                 cc = list(map(lambda x, y: (np.append(x, y)).tolist(), cc, self.P))
-                filename = '{}/{}_centers_{}.js'.format(path, self.metric[0], iteration)
+                filename = '{}/{}_centers_{}.js'.format(path, self.metric[0], iteration + 1)
                 dump(cc, filename)
 
                 xc = self.X
                 xc = list(map(lambda x, y: (np.append(x, y)).tolist(), xc, self.L))
-                filename = '{}/{}_points_{}.js'.format(path, self.metric[0], iteration)
+                filename = '{}/{}_points_{}.js'.format(path, self.metric[0], iteration + 1)
                 dump(xc, filename)
 
             # array for calculated centers of clusters
-            mu = np.empty([self.c_len, 3])
+            mu = np.empty([self.c_len, 3], dtype='object')
 
+            print('\n  calculating new centers')
             # for each cluster
             i = 0
             while i < self.c_len:
@@ -206,16 +209,28 @@ class KMeans():
                 if self.P[i] != 0:
                     # calculate center of cluster
                     mu[i] = np.append(np.mean(self.A[i], axis=0), i)
+                    mu[i][0], mu[i][1], mu[i][2] = round(mu[i][0], 6), round(mu[i][1], 6), int(mu[i][2])
                 else:
                     mu[i] = self.C[i]
                 i += 1
+            print('  replacing old centers with new')
             # equate current centroids to calculated
             self.C = mu
             # increment iteration counter
             iteration += 1
-            print('\n  iter end: {:.2f}k distance calculations\n'.format(self.icntr / 1000))
+            print('  iteration end: {:.2f}k distance calculations'.format(self.icntr / 1000))
+            iter_time = time.time() - time_start
+            if iter_time > 86400:
+                iter_time = '{:.4f} days'.format(iter_time / 86400)
+            elif iter_time > 3600:
+                iter_time = '{:.4f} hours'.format(iter_time / 3600)
+            elif iter_time > 60:
+                iter_time = '{:.4f} minutes'.format(iter_time / 60)
+            else:
+                iter_time = '{:.4f} seconds'.format(iter_time)
+            print(' ' * 17 + '{}'.format(iter_time))
             self.icntr = 0
-        print('Overall distance calculations: {}'.format(self.cntr))
+        print('\nOverall distance calculations: {}'.format(self.cntr))
         # record results
         self.cluster_centers_ = self.C
         self.labels_ = self.L
@@ -325,6 +340,14 @@ class KMeansClusteringMachine(ClusteringMachine):
         self.cluster_instance.fit(self.X, self.cluster_centers, metric)
         # calculate time
         self.fit_time = time.time() - t_start - self.cluster_instance.sleeping
+        if self.fit_time > 86400:
+            self.fit_time = '{:.4f} days'.format(self.fit_time / 86400)
+        elif self.fit_time > 3600:
+            self.fit_time = '{:.4f} hours'.format(self.fit_time / 3600)
+        elif self.fit_time > 60:
+            self.fit_time = '{:.4f} minutes'.format(self.fit_time / 60)
+        else:
+            self.fit_time = '{:.4f} seconds'.format(self.fit_time)
         # get points labels
         self.labels = self.cluster_instance.labels_
         # get clusters population

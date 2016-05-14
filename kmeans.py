@@ -3,14 +3,14 @@ from KMeansMachine import KMeansClusteringMachine as kmeans
 from KMeansMachineTriangle import KMeansClusteringMachine as kmeans_triangle
 
 USE_TRIANGLE_INEQUALITY = False
-test = 'few' # full, few, common, river, railway
+test = 'common' # full, few, common, river, railway
 metric = 'route' # route, surface, euclid
+iterations_count = 50
 
 datafile = 'data/data_{}_pts.txt'.format(test)
 init = 'file'
 filename = 'data/data_{}_cls.txt'.format(test)
 log = test
-max_iter = 50
 
 # create DataCollector object
 dc = DataCollector()
@@ -21,9 +21,9 @@ X = dc.getData()
 
 # create KMeansClusteringMachine object with specified parameters
 if USE_TRIANGLE_INEQUALITY:
-    km = kmeans_triangle(X, init=init, filename=filename, max_iter=max_iter, log=log)
+    km = kmeans_triangle(X, init=init, filename=filename, max_iter=iterations_count, log=log)
 else:
-    km = kmeans(X, init=init, filename=filename, max_iter=max_iter, log=log)
+    km = kmeans(X, init=init, filename=filename, max_iter=iterations_count, log=log)
 # perform clustering
 km.fit(metric)
 # print info

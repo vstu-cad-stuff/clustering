@@ -167,8 +167,8 @@ class route():
 
         a, b = a[:2], b[:2]
 
-        c = list(map(lambda i: np.round(i, decimals=6), a))
-        d = list(map(lambda i: np.round(i, decimals=6), b))
+        c = list(map(lambda i: np.round(i, decimals=5), a))
+        d = list(map(lambda i: np.round(i, decimals=5), b))
 
         if np.array_equal(c, d):
             # if points are the same return zero
@@ -180,10 +180,10 @@ class route():
             except OSRMError:
                 # locate first point
                 c = self.locate(a)
-                c = list(map(lambda i: np.round(i, decimals=6), c))
+                c = list(map(lambda i: np.round(i, decimals=5), c))
                 # locate second point
                 d = self.locate(b)
-                d = list(map(lambda i: np.round(i, decimals=6), d))
+                d = list(map(lambda i: np.round(i, decimals=5), d))
 
                 if np.array_equal(c, d):
                     dist = 0.0

@@ -96,7 +96,7 @@ class KMeans():
         print('{0}{1}'.format(delete, text), end='')
         return r
 
-    def stop(self, iter, old, new):
+    def stop(self, iter, old, new, lold, lnew):
         """ Check whenever clustering needs to be stopped.
 
         Parameters
@@ -115,7 +115,7 @@ class KMeans():
         """
         if iter >= self.max_iter_:
             return True
-        return np.array_equal(old, new)
+        return np.array_equal(old, new) or np.array_equal(lold, lnew)
 
     def cloop(self, i, j):
         return (self.dist(self.X[i], self.C[j], self.metric), j)
@@ -147,6 +147,7 @@ class KMeans():
         # set initial parameters
         iteration = 0
         c_old = None
+        l_old = None
         # get length of lists
         self.c_len = len(C)
         self.x_len = len(X)
@@ -162,7 +163,7 @@ class KMeans():
         if self.metric == 'route':
             self.route_.start()
         # while clustering isn't completed
-        while not self.stop(iteration, c_old, self.C):
+        while not self.stop(iteration, c_old, self.C, l_old, self.L):
             time_start = time.time()
             # reset population in clusters
             self.P = np.zeros([self.c_len])
@@ -173,6 +174,7 @@ class KMeans():
             self.A = [np.empty([0, 2]) for i in range(self.c_len)]
             # for each point
             print('  assigning points')
+            l_old = np.array(self.L)
             res = async_worker(range(self.x_len), self.xloop)
             # res = list(POOL.map(self.xloop, range(self.x_len)))
             # res = list(map(self.xloop, range(self.x_len)))
@@ -208,10 +210,11 @@ class KMeans():
                 # if it contains points
                 if self.P[i] != 0:
                     # calculate center of cluster
-                    mu[i] = np.append(np.mean(self.A[i], axis=0), i)
-                    mu[i][0], mu[i][1], mu[i][2] = round(mu[i][0], 6), round(mu[i][1], 6), int(mu[i][2])
+                    k = np.array(np.round(np.mean(self.A[i], axis=0), decimals=5), dtype='object')
+                    mu[i] = np.append(k, i)
                 else:
-                    mu[i] = self.C[i]
+                    d = np.round(self.C[i][:2].astype(np.double), decimals=5)
+                    mu[i] = np.append(d.astype(np.object), i)
                 i += 1
             print('  replacing old centers with new')
             # equate current centroids to calculated

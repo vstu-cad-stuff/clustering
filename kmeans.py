@@ -3,9 +3,9 @@ from KMeansMachine import KMeansClusteringMachine as kmeans
 from KMeansMachineTriangle import KMeansClusteringMachine as kmeans_triangle
 
 USE_TRIANGLE_INEQUALITY = False
-test = 'common' # full, few, common, river, railway
+test = 'few' # full, few, common, river, railway
 metric = 'route' # route, surface, euclid
-iterations_count = 50
+iterations_count = 100
 
 datafile = 'data/data_{}_pts.txt'.format(test)
 init = 'file'

@@ -32,10 +32,10 @@ def hull(a, b):
         h.append(b[i])
     return h
 
-if __name__ == '__main__':
-    last = 35 # last iteration number
-    log = 'few' # few, full, common, river, railway
-    metric = 'route' # route, euclid, surface
+def action(param_list):
+    last = param_list['last']
+    log = param_list['log']
+    metric = param_list['metric']
     filecen = '{}_{}c.js'.format(log, metric[0])
     filepoi = '{}_{}p.js'.format(log, metric[0])
 
@@ -76,3 +76,25 @@ if __name__ == '__main__':
         hulls.append(this_hulls)
     json.dump(hulls, File)
     File.close()
+
+def actions(lists):
+    for params in lists:
+        action(params)
+
+if __name__ == '__main__':
+    euclid = {
+        'last': 10, # last iteration number
+        'log': 'few', # few, full, common, river, railway
+        'metric': 'euclid' # route, euclid, surface
+    }
+    route = {
+        'last': 11, # last iteration number
+        'log': 'few', # few, full, common, river, railway
+        'metric': 'route' # route, euclid, surface
+    }
+    surface = {
+        'last': 14, # last iteration number
+        'log': 'few', # few, full, common, river, railway
+        'metric': 'surface' # route, euclid, surface
+    }
+    actions((euclid, route, surface))

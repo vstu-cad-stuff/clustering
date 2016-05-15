@@ -13,7 +13,7 @@
 ####Ссылки
 - [kmeans.py](/kmeans.py): кластеризатор точек методом K-Means.
 - [routelib.py](/routelib.py): класс метрики расстояний по городским дорогам.
-- [github.io](http://vstu-cad-stuff.github.io/clustering/cluster): визуализации работы алгоритмов.
+- [github.io](http://vstu-cad-stuff.github.io/clustering): визуализации работы алгоритмов.
 
 ####Файлы
 - [data/](/data/): 5 выборок данных для тестов. Файлы `*_cls` -- начальное распредение кластеров, `*_pts` -- кластеризуемые точки.

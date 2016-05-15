@@ -3,6 +3,7 @@ import geojson as json
 import time
 import numpy as np
 import os
+from geographiclib.geodesic import Geodesic
 
 from routelib import route
 from InitMachine import InitMachine
@@ -83,9 +84,10 @@ class KMeans():
         elif metric == 'euclid':
             r = np.sqrt((b[0] - a[0]) ** 2 + (b[1] - a[1]) ** 2)
         elif metric == 'surface':
-            d = np.arccos(np.sin(a[0]) * np.sin(b[0]) + np.cos(a[0]) * np.cos(b[0]) * np.cos(b[1] - a[1]))
-            R = 6371. # Earth radius
-            r = d * R
+            r = Geodesic.WGS84.Inverse(a[0], a[1], b[0], b[1])['s12']
+            #d = np.arccos(np.sin(a[0]) * np.sin(b[0]) + np.cos(a[0]) * np.cos(b[0]) * np.cos(b[1] - a[1]))
+            #R = 6371. # Earth radius
+            #r = d * R
         else:
             raise ValueError('Unknown metric: {}'.format(metric))
         self.cntr += 1
@@ -262,8 +264,6 @@ class KMeansClusteringMachine(ClusteringMachine):
         Specify the name of initialize file (in file initializing).
     max_iter : int, default 100
         Set maximum iteration number.
-    header : string, default None
-        Set header that contains info about borders.
 
     Attributes
     ----------
@@ -276,13 +276,12 @@ class KMeansClusteringMachine(ClusteringMachine):
     bounds = None
 
     def __init__(self, X, init='random', count=40, gridSize=[7, 7],
-                 filename='init.txt', max_iter=100, header=None,
-                 log=True):
+                 filename='init.txt', max_iter=100, log=True):
         self.X = X
 
         self.initM = InitMachine()
 
-        self.bounds = self.getBounds(header_=header, points_=X)
+        self.bounds = self.getBounds(points=X)
         if init == 'random':
             self.initM.random(count=count, bounds=self.bounds)
         elif init == 'grid':
@@ -294,14 +293,12 @@ class KMeansClusteringMachine(ClusteringMachine):
         self.cluster_centers = self.initM.getCenters()
         self.cluster_instance = KMeans(max_iter=max_iter, log=log)
 
-    def getBounds(self, header_=None, points_=None):
+    def getBounds(self, points):
         """ Calculate bounds of initial centers generation.
 
         Parameters
         ----------
-        header_ : string
-            String contains info about borders.
-        points_ : array [n_points, n_dimensions]
+        points : array [n_points, n_dimensions]
             Coordinates of points
 
         Returns
@@ -309,30 +306,25 @@ class KMeansClusteringMachine(ClusteringMachine):
         bounds : array {bottom_border, left_border, top_border, right_border}
             Bounds of initial centers generation.
         """
-        bounds_ = None
-        # if both header_ and points_ are not setted show error
-        if header_ == None and points_ == None:
+        bounds = None
+        if points == None:
             print('No source to get bounds')
         else:
-            # if header_ is setted, split it to get bounds
-            if header_:
-                bounds_ = [float(n) for n in header_.split()]
-            else:
-                # if points are setted, choose four coordinates
-                # of different points as bounds:
-                # most bottom, most left, most top, and most right
-                b, l, t, r = [points_[0]] * 4
-                for p in points_[1:]:
-                    if p[0] > t[0]:
-                        t = p
-                    if p[0] < b[0]:
-                        b = p
-                    if p[1] > r[1]:
-                        r = p
-                    if p[1] < l[1]:
-                        l = p
-                bounds_ = [b[0], l[1], t[0], r[1]]
-        return bounds_
+            # if points are setted, choose four coordinates
+            # of different points as bounds:
+            # most bottom, most left, most top, and most right
+            b, l, t, r = [points[0]] * 4
+            for p in points[1:]:
+                if p[0] > t[0]:
+                    t = p
+                if p[0] < b[0]:
+                    b = p
+                if p[1] > r[1]:
+                    r = p
+                if p[1] < l[1]:
+                    l = p
+            bounds = [b[0], l[1], t[0], r[1]]
+        return bounds
 
     def fit(self, metric='route'):
         """ Perform clustering.

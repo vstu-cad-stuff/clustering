@@ -3,19 +3,38 @@
 Проект по кластеризации предпочтений жителей города по перемещению, выраженных в виде
 множества точек отправления и прибытия на карте OpenStreetMap.
 
+Для работы необходим python v2.7 / v3.x.
+Для использования метрики route необходим OSRM Server API v5.0 / v4.7.
+
+Для информации запустите скрипт `kmeans.py` с ключом `--help`:
+
+    python kmeans.py --help
+
+####Ссылки
+- [kmeans.py](/kmeans.py): кластеризатор точек методом K-Means.
+- [routelib.py](/routelib.py): класс метрики расстояний по городским дорогам.
+- [github.io](http://vstu-cad-stuff.github.io/clustering/cluster): визуализации работы алгоритмов.
+
+####Файлы
+- [data/](/data/): 5 выборок данных для тестов. Файлы `*_cls` -- начальное распредение кластеров, `*_pts` -- кластеризуемые точки.
+    + Файлы `full_*` -- выборка из 12000 точек и 125 кластеров.
+    + Файлы `few_*` -- часть выборки `full_*`, 500 точек и 20 кластеров.
+    + Файлы `common_*` -- выборка из 180 точек и 10 кластеров, городской квартал.
+    + Файлы `river_*` -- выборка из 6 точек и 2 кластеров, естественное препятствие - река.
+    + Файлы `railway_*` -- выборка из 6 точек и 2 кластеров, искуственное препятствие - железная дорога.
+- [ClusteringMachine.py](/ClusteringMachine.py): шаблон класса для кластеризации.
+- [converter.py](/converter.py): конвертер итерационных логов алгоритма в формат js для визуализации.
+- [DataCollector.py](/DataCollector.py): класс для сбора данных.
+- [InitMachine.py](/InitMachine.py): класс для загрузки начального распределения кластеров. Для расчета выпуклых оболочек используется [Алгоритм Джарвиса](https://ru.wikipedia.org/wiki/Алгоритм_Джарвиса).
+- [kmeans.py](/kmeans.py): скрипт кластеризации по заданным параметрам.
+- [KMeansMachine.py](/KMeansMachine.py): класс, реализующий кластеризацию с помощью алгоритма K-Means.
+- [KMeansMachineTriangle.py](/KMeansMachineTriangle.py): класс, реализующий кластеризацию с помощью алгоритма K-Means. Использовалась статья ["Using the Triangle Inequality to Accelerate k-Means" by Elkan Ch.](http://cseweb.ucsd.edu/~elkan/kmeansicml03.pdf) для сокращения количества вычислений дистанций (количество сокращается, однако из-за ненайденной ошибки происходит создание одного большого кластера, перекрывающего остальные ([look here](http://vstu-cad-stuff.github.io/clustering/with_triangle/))).
+- [routelib.py](/routelib.py) -- класс метрики, основанный на вычислении дистанций между точками с использованием движка [OSRM](https://github.com/Project-OSRM/osrm-backend/).
+- [scatter2normal.py](/scatter2normal.py) -- вспомогательный скрипт для перевода вывода утилиты [Scatter](https://vstu-cad-stuff.github.io/scatter/) во входной формат для `InitMachine` и `DataCollector`. Точки назначения (серые, destination) используются для центров кластеров, остальные -- как точки для кластеризации.
+
 ----
-Для работы необходим python v2.7.
 
-If you have run the clustering script in this directory which created some temporary files that you wish to delete, the following commands will clean any untracked changes in the local repository made since last "git pull" or "git push", effectively undoing any changes made. This is, of course, if you haven't asked Git to track those files using "git add":
+Для очистки директории от временных файлов используются следующие команды:
 
-1. git clean -df
-
-This command removes any files untracked by Git
-
-2. git checkout -- .
-
-This restores all files tracked by Git to their state since last "git pull" or "git push", reverting any changes you may have made.
-
-####Ссылки:
-- [k-means](/kmeans.py): кластеризатор точек методом K-Means
-- [github.io](http://vstu-cad-stuff.github.io/clustering/cluster): визуализации работы алгоритмов
+1. `git clean -df` для удаления файлов, несопровождаемых Git
+2. `git checkout -- .` для восстановления всех сопровождаемых файлов к последнему сделанному коммиту.

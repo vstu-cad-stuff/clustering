@@ -11,10 +11,7 @@ class InitMachine():
     centers : array, [n_clusters, n_params]
         n_params = 3: lat, lon, id
     """
-    centers = None
-
-    def __init__(self):
-        self.centers = np.empty([0, 3], dtype='float64, float64, int32')
+    centers = np.empty([0, 3], dtype='object')
 
     def grid(self, gridSize, bounds):
         """ Initialize centers by grid.
@@ -58,8 +55,7 @@ class InitMachine():
         for i in range(count):
             self.centers = np.append(self.centers,
                 [[random.uniform(bounds[0], bounds[2]),
-                  random.uniform(bounds[1], bounds[3]), i]],
-                axis=0)
+                  random.uniform(bounds[1], bounds[3]), i]], axis=0)
 
     def file(self, filename):
         """ Initialize centers by random.

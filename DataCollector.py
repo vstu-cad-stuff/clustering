@@ -9,23 +9,17 @@ class DataCollector():
     ----------
     data : array, [n_points, n_dimensions]
         Coordinates of points.
-
-    header : string
-        File header. May contain borders used in some clustering algorithms.
     """
 
     data = np.array([])
-    header = ''
 
-    def uploadFromTextFile(self, filename, header = False, delimiter = ','):
+    def uploadFromTextFile(self, filename, delimiter = ','):
         """ Upload data from text file.
 
         Parameters
         ----------
         filename : string path
             Name of data source file.
-        header : boolean, default False
-            If true, first line of file will be used as header.
         delimiter : string, default ','
             Sets source file data delimiter.
         """
@@ -33,9 +27,6 @@ class DataCollector():
             with open(filename) as file_:
                 # create an empty array for points
                 data_ = np.empty((0, 2), float)
-                # if header set to True read first line to self.header
-                if header:
-                    self.header = file_.readline()
                 # for each line in file read latitude and longitude of point
                 # and record them to data array
                 for line in file_:
@@ -67,16 +58,6 @@ class DataCollector():
         plt.figure()
         plt.scatter(self.data[:, 0], self.data[:, 1])
         plt.show()
-
-    def getHeader(self):
-        """ Get collected header.
-
-        Returns
-        -------
-        header : string
-            File header.
-        """
-        return self.header
 
     def exportToTextFile(self, filename):
         """ Record data to text file.

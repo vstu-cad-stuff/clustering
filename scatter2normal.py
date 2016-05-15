@@ -1,4 +1,4 @@
-filename = 'data_common.txt'
+filename = 'common.txt'
 
 cluster_type = ('destination', 'cluster')
 
@@ -17,7 +17,7 @@ for entry in data:
     else:
         points.append([lat, lon])
 
-with open ('{}_cls.txt'.format('.'.join(filename.split('.')[:-1])), 'w') as f:
+with open ('data/{}_cls.txt'.format('.'.join(filename.split('.')[:-1])), 'w') as f:
     f.write(str(clusters))
-with open ('{}_pts.txt'.format('.'.join(filename.split('.')[:-1])), 'w') as f:
+with open ('data/{}_pts.txt'.format('.'.join(filename.split('.')[:-1])), 'w') as f:
     f.write('\n'.join(list(map(lambda x: '{},{}'.format(x[0], x[1]), points))))

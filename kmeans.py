@@ -3,7 +3,7 @@ from KMeansMachine import KMeansClusteringMachine as kmeans
 from KMeansMachineTriangle import KMeansClusteringMachine as kmeans_triangle
 from argparse import ArgumentParser
 
-parser = ArgumentParser(description='k-Means clutering.')
+parser = ArgumentParser(description='k-Means clustering.')
 parser.add_argument('-m', '--metric', help='Used metric', choices=['route', 'euclid', 'surface'], default='route')
 parser.add_argument('-s', '--sample', help='Used sample.\n'
                           '  Points are loaded from "data/SAMPLE_pts.txt" if "--points" in not set.\n'

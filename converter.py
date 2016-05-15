@@ -1,5 +1,6 @@
 import json
 import numpy as np
+from argparse import ArgumentParser
 
 def rotate(a, b, c):
     return (b[1] - a[1]) * (c[0] - b[0]) - (b[0] - a[0]) * (c[1] - b[1])
@@ -81,20 +82,32 @@ def actions(lists):
     for params in lists:
         action(params)
 
-if __name__ == '__main__':
-    euclid = {
-        'last': 10, # last iteration number
-        'log': 'few', # few, full, common, river, railway
-        'metric': 'euclid' # route, euclid, surface
-    }
-    route = {
-        'last': 11, # last iteration number
-        'log': 'few', # few, full, common, river, railway
-        'metric': 'route' # route, euclid, surface
-    }
-    surface = {
-        'last': 14, # last iteration number
-        'log': 'few', # few, full, common, river, railway
-        'metric': 'surface' # route, euclid, surface
-    }
-    actions((euclid, route, surface))
+parser = ArgumentParser()
+parser.add_argument('-m', '--metric', choices=['route', 'euclid', 'surface'], help='Used metric')
+parser.add_argument('-l', '--last', type=int, help='Last iteration numer')
+parser.add_argument('-f', '--folder', help='Folder with data')
+parser.add_argument('-n', '--many', nargs='*', help='Multiple converts. Args order: folder1 metric1 last1 folder2 metric2 ...')
+
+args = parser.parse_args()
+if args.many:
+    folders = args.many[::3]
+    metrics = args.many[1::3]
+    lasts = args.many[2::3]
+    length = len(lasts)
+    if len(folders) > length:
+        print('Number of args is not n*3')
+
+    acts = []
+    for i in range(length):
+        last = int(lasts[i])
+        fold = folders[i]
+        metr = metrics[i]
+        acts.append({'last': last, 'log': fold, 'metric': metr})
+
+    actions(acts)
+else:
+    last = args.last
+    metr = args.metric
+    fold = args.folder
+
+    action({'last': last, 'log': fold, 'metric': metr})

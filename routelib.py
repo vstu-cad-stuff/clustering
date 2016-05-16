@@ -56,16 +56,19 @@ class route():
         time.sleep(self.sleep)
         a = [44.27, 48.41]
         url = 'http://localhost:5000/nearest/v1/car/{},{}'.format(*a[::-1])
-        responce = urlopen(url)
-        if not PYTHON2:
-            responce = responce.readall().decode('utf-8')
-            data = json.loads(responce)
-        else:
-            data = json.load(responce)
         try:
-            code = data['code']
-            self.API = 5
-        except KeyError:
+            responce = urlopen(url)
+            if not PYTHON2:
+                responce = responce.readall().decode('utf-8')
+                data = json.loads(responce)
+            else:
+                data = json.load(responce)
+            try:
+                code = data['code']
+                self.API = 5
+            except KeyError:
+                self.API = 4
+        except:
             self.API = 4
 
     def viaroute(self, a, b):

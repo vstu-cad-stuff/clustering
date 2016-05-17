@@ -56,7 +56,6 @@ class KMeans():
     population_ = None
     log = False
     route_ = None
-    cntr = 0
     icntr = 0
 
     def __init__(self, max_iter, log):
@@ -90,7 +89,6 @@ class KMeans():
             #r = d * R
         else:
             raise ValueError('Unknown metric: {}'.format(metric))
-        self.cntr += 1
         self.icntr += 1
         text = '      progress: {:.2f}k / {:.2f}k'.format(self.icntr / 1000, self.x_len * self.c_len / 1000)
         digits = len(text)
@@ -235,7 +233,6 @@ class KMeans():
                 iter_time = '{:.4f} seconds'.format(iter_time)
             print(' ' * 17 + '{}'.format(iter_time))
             self.icntr = 0
-        print('\nOverall distance calculations: {}'.format(self.cntr))
         # record results
         self.cluster_centers_ = self.C
         self.labels_ = self.L

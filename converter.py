@@ -24,7 +24,6 @@ def jarvis(a):
         else:
             h.append(p[right])
             del p[right]
-    print('Found {} vertices'.format(len(h)))
     return h
 
 def hull(a, b):
@@ -43,13 +42,15 @@ def action(param_list):
     centers = []
     hulls = []
 
+    print('Processing {} {} {}...'.format(log, metric, last))
+
     File = open(filecen, 'w')
     File.write('{}_{}c = '.format(log[:3], metric[0]))
     for i in range(1, last + 1):
         filec = '{}/{}_centers_{}.js'.format(log, metric[0], i)
         with open(filec, 'r') as file_:
             center = json.load(file_)
-            print('readed c#' + str(i))
+            # print('readed c#' + str(i))
             centers.append(center)
     json.dump(centers, File)
     File.close()
@@ -60,7 +61,7 @@ def action(param_list):
         filep = '{}/{}_points_{}.js'.format(log, metric[0], i)
         with open(filep, 'r') as file_:
             points = json.load(file_)
-            print('readed p#' + str(i))
+            # print('readed p#' + str(i))
         mx = int(max(map(lambda k: k[2], points))) + 1
         ps = [np.empty([0, 3]) for each in range(0, mx)]
         for j in points:
@@ -69,8 +70,9 @@ def action(param_list):
         this_hulls = []
         for j in ps:
             try:
-                print('Calculating hull of {} points for cluster {}'.format(len(j), j[0][2]))
+                # print('Calculating hull of {} points for cluster {}'.format(len(j), j[0][2]))
                 h = hull(jarvis(j), j.tolist())
+                # print('Found {} vertices'.format(len(h)))
                 this_hulls.append(h)
             except IndexError:
                 pass
@@ -94,8 +96,6 @@ if args.many:
     metrics = args.many[1::3]
     lasts = args.many[2::3]
     length = len(lasts)
-    if len(folders) > length:
-        print('Number of args is not n*3')
 
     acts = []
     for i in range(length):
@@ -105,6 +105,8 @@ if args.many:
         acts.append({'last': last, 'log': fold, 'metric': metr})
 
     actions(acts)
+    if len(folders) > length:
+        print('[warn] Number of args was not n*3')
 else:
     last = args.last
     metr = args.metric

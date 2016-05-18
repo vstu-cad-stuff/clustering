@@ -123,7 +123,7 @@ class route():
             l_data = json.load(l_resp)
         # if can't locate
         if self.API == 4:
-            if l_data['status'] is not 0:
+            if l_data['status'] != 0:
                 # stop osrm machine
                 self.stop()
                 # throw error
@@ -131,7 +131,7 @@ class route():
             else:
                 return l_data['mapped_coordinate']
         elif self.API == 5:
-            if l_data['code'] is not u'Ok':
+            if l_data['code'] != 'Ok':
                 # stop osrm machine
                 self.stop()
                 # throw error

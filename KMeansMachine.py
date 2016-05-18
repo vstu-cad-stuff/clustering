@@ -10,7 +10,8 @@ from InitMachine import InitMachine
 from ClusteringMachine import ClusteringMachine
 
 from multiprocessing.dummy import Pool as ThreadPool
-POOL = ThreadPool(processes=4)
+THREADS = 4
+POOL = ThreadPool(processes=THREADS)
 
 def async_worker(iterator, func, data=None):
     thread_list = []
@@ -55,12 +56,15 @@ class KMeans():
     labels_ = None
     population_ = None
     log = False
+    _continue = False
     route_ = None
     icntr = 0
 
-    def __init__(self, max_iter, log):
+    def __init__(self, max_iter, log, start, stations):
         self.max_iter_ = max_iter
         self.log = log
+        self._continue = start
+        self.stations = stations
         self.route_ = route()
 
     def dist(self, a, b, metric):
@@ -152,6 +156,7 @@ class KMeans():
         self.c_len = len(C)
         self.x_len = len(X)
         print('Now {} points will be clustering to {} clusters'.format(self.x_len, self.c_len))
+        print('Threads count: {}; log: {}'.format(THREADS, self.log))
 
         self.L = np.empty([self.x_len])
         self.C = C
@@ -159,9 +164,11 @@ class KMeans():
         self.P = None
         self.A = None
         self.metric = metric
+        self.sleeping = 0
 
-        if self.metric == 'route':
+        if self.metric == 'route' or self.stations:
             self.route_.start()
+            self.sleeping += self.route_.sleep
         # while clustering isn't completed
         while not self.stop(iteration, c_old, self.C, l_old, self.L):
             time_start = time.time()
@@ -175,30 +182,37 @@ class KMeans():
             # for each point
             print('  assigning points')
             l_old = np.array(self.L)
-            res = async_worker(range(self.x_len), self.xloop)
-            # res = list(POOL.map(self.xloop, range(self.x_len)))
-            # res = list(map(self.xloop, range(self.x_len)))
-            # equate the previous and current centers of clusters
-            c_old = self.C
-            if self.log:
-                if self.log is not True:
-                    path = '{}'.format(self.log)
-                else:
-                    path = 'km_{}'.format(self.metric[:2])
-                if path == '':
-                    path = '.'
-                else:
-                    if not (os.path.exists(path)):
-                         os.makedirs(path)
-                cc = self.C
-                cc = list(map(lambda x, y: (np.append(x, y)).tolist(), cc, self.P))
-                filename = '{}/{}_centers_{}.js'.format(path, self.metric[0], iteration + 1)
-                dump(cc, filename)
+            if not self._continue:
+                res = async_worker(range(self.x_len), self.xloop)
+                # res = list(POOL.map(self.xloop, range(self.x_len)))
+                # res = list(map(self.xloop, range(self.x_len)))
+                # equate the previous and current centers of clusters
+                c_old = self.C
+                if self.log:
+                    if self.log is not True:
+                        path = '{}'.format(self.log)
+                    else:
+                        path = 'km_{}'.format(self.metric[:2])
+                    if path == '':
+                        path = '.'
+                    else:
+                        if not (os.path.exists(path)):
+                             os.makedirs(path)
+                    cc = self.C
+                    cc = list(map(lambda x, y: (np.append(x, y)).tolist(), cc, self.P))
+                    filename = '{}/{}_centers_{}.js'.format(path, self.metric[0], iteration + 1)
+                    dump(cc, filename)
 
-                xc = self.X
-                xc = list(map(lambda x, y: (np.append(x, y)).tolist(), xc, self.L))
-                filename = '{}/{}_points_{}.js'.format(path, self.metric[0], iteration + 1)
-                dump(xc, filename)
+                    xc = self.X
+                    xc = list(map(lambda x, y: (np.append(x, y)).tolist(), xc, self.L))
+                    filename = '{}/{}_points_{}.js'.format(path, self.metric[0], iteration + 1)
+                    dump(xc, filename)
+            else:
+                self.L = np.array([])
+                for i in json.load(open(self._continue)):
+                    self.L = np.append(self.L, i[2])
+                    self.A[int(i[2])] = np.append(self.A[int(i[2])], [[i[0], i[1]]], axis=0)
+                self._continue = False
 
             # array for calculated centers of clusters
             mu = np.empty([self.c_len, 3], dtype='object')
@@ -216,6 +230,15 @@ class KMeans():
                     d = np.round(self.C[i][:2].astype(np.double), decimals=5)
                     mu[i] = np.append(d.astype(np.object), i)
                 i += 1
+            if self.stations:
+                print('  locating centers on roadmap')
+                for c in range(self.c_len):
+                    text = '      progress: {} / {}'.format(c + 1, self.c_len)
+                    digits = len(text)
+                    delete = '\r' * digits
+                    print('{0}{1}'.format(delete, text), end='')
+                    new = self.route_.locate(mu[c][:2])
+                    mu[c][0], mu[c][1] = new[0], new[1]
             print('  replacing old centers with new')
             # equate current centroids to calculated
             self.C = mu
@@ -237,9 +260,7 @@ class KMeans():
         self.cluster_centers_ = self.C
         self.labels_ = self.L
         self.population_ = self.P
-        self.sleeping = 0
-        if self.metric == 'route':
-            self.sleeping = self.route_.sleep
+        if self.metric == 'route' or self.stations:
             self.route_.stop()
 
 class KMeansClusteringMachine(ClusteringMachine):
@@ -272,8 +293,14 @@ class KMeansClusteringMachine(ClusteringMachine):
     initM = None
     bounds = None
 
-    def __init__(self, X, init='random', count=40, gridSize=[7, 7],
-                 filename='init.txt', max_iter=100, log=True):
+    def __init__(self, X, init='random', count=40, grid_size=[7, 7],
+                 filename='init.txt', max_iter=100, log=True,
+                 thread_cound=4, start=False, stations=False):
+        global POOL
+        global THREADS
+        THREADS = thread_cound
+        POOL = ThreadPool(processes=THREADS)
+
         self.X = X
 
         self.initM = InitMachine()
@@ -282,13 +309,13 @@ class KMeansClusteringMachine(ClusteringMachine):
         if init == 'random':
             self.initM.random(count=count, bounds=self.bounds)
         elif init == 'grid':
-            self.initM.grid(gridSize=gridSize, bounds=self.bounds)
+            self.initM.grid(gridSize=grid_size, bounds=self.bounds)
         elif init == 'file':
             self.initM.file(filename=filename)
         else:
             print('Unrecognized init type: {}'.format(init))
         self.cluster_centers = self.initM.getCenters()
-        self.cluster_instance = KMeans(max_iter=max_iter, log=log)
+        self.cluster_instance = KMeans(max_iter=max_iter, log=log, start=start, stations=stations)
 
     def getBounds(self, points):
         """ Calculate bounds of initial centers generation.

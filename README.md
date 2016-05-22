@@ -23,9 +23,9 @@
     + Файлы `river_*` -- выборка из 6 точек и 2 кластеров, естественное препятствие - река.
     + Файлы `railway_*` -- выборка из 6 точек и 2 кластеров, искуственное препятствие - железная дорога.
 - [ClusteringMachine.py](/ClusteringMachine.py): шаблон класса для кластеризации.
-- [converter.py](/converter.py): конвертер итерационных логов алгоритма в формат js для визуализации.
+- [converter.py](/converter.py): конвертер итерационных логов алгоритма в формат js для визуализации. Для расчета выпуклых оболочек используется [Алгоритм Джарвиса](https://ru.wikipedia.org/wiki/Алгоритм_Джарвиса).
 - [DataCollector.py](/DataCollector.py): класс для сбора данных.
-- [InitMachine.py](/InitMachine.py): класс для загрузки начального распределения кластеров. Для расчета выпуклых оболочек используется [Алгоритм Джарвиса](https://ru.wikipedia.org/wiki/Алгоритм_Джарвиса).
+- [InitMachine.py](/InitMachine.py): класс для загрузки начального распределения кластеров.
 - [kmeans.py](/kmeans.py): скрипт кластеризации по заданным параметрам.
 - [KMeansMachine.py](/KMeansMachine.py): класс, реализующий кластеризацию с помощью алгоритма K-Means.
 - [KMeansMachineTriangle.py](/KMeansMachineTriangle.py): класс, реализующий кластеризацию с помощью алгоритма K-Means. Использовалась статья ["Using the Triangle Inequality to Accelerate k-Means" by Elkan Ch.](http://cseweb.ucsd.edu/~elkan/kmeansicml03.pdf) для сокращения количества вычислений дистанций (количество сокращается, однако из-за ненайденной ошибки происходит создание одного большого кластера, перекрывающего остальные ([look here](http://vstu-cad-stuff.github.io/clustering/with_triangle/))).

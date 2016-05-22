@@ -137,9 +137,9 @@ River.addView([[48.7717, 44.7262], 14]);
 var Few = new Test('few');
 Few.init([['euclid', few_ec, few_ep], ['route', few_rc, few_rp], ['surface', few_sc, few_sp]]);
 Few.addView([[48.7941, 44.8009], 12]);
-var Full = new Test('full');
+/*var Full = new Test('full');
 Full.init([['euclid', ful_ec, ful_ep], ['route', ful_rc, ful_rp], ['surface', ful_sc, ful_sp]]);
-Full.addView([[48.7941, 44.8009], 12]);
+Full.addView([[48.7941, 44.8009], 12]);*/
 
 var current = [], circles;
 

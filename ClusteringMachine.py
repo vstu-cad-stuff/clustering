@@ -84,7 +84,9 @@ class ClusteringMachine():
         -----
         Uses JSON data format.
         """
-        cc = list(map(lambda x, y: (np.append(x, y)).tolist(), self.cluster_centers, self.population))
+        cc = map(lambda x, y: (np.append(x, y)).tolist(), self.cluster_centers, self.population)
+        cc = list(map(lambda i: {'lat': i[0], 'lon': i[1], 'id': i[2], 'pop': i[3]}, cc))
+
         try:
             path = os.path.dirname(filename)
             if path == '':
@@ -110,13 +112,10 @@ class ClusteringMachine():
         Uses JSON data format.
         """
         # create new array with one more dimension for points
-        X_ = np.empty((len(self.X), 3))
+        X = list(range(len(self.X)))
         # for each point in X array
-        for i in range(len(X_)):
-            # set X_[i][0] and X_[i][1] to point coordinates
-            X_[i][0], X_[i][1] = self.X[i][0], self.X[i][1]
-            # set X_[i][2] to point label
-            X_[i][2] = self.labels[i]
+        for i in X:
+            X[i] = {'lat': self.X[i][0], 'lon': self.X[i][1], 'clusterId': self.labels[i]}
 
         try:
             path = os.path.dirname(filename)
@@ -126,6 +125,6 @@ class ClusteringMachine():
                 if not (os.path.exists(path)):
                      os.makedirs(os.path.dirname(filename))
             with open(filename, 'w') as file_:
-                json.dump(X_.tolist(), file_)
+                json.dump(X, file_)
         except IOError as e:
             print('{}'.format(e))

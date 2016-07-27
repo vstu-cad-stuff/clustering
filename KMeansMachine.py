@@ -12,6 +12,7 @@ from ClusteringMachine import ClusteringMachine
 from multiprocessing.dummy import Pool as ThreadPool
 THREADS = 4
 POOL = ThreadPool(processes=THREADS)
+QUIET = False
 
 def async_worker(iterator, func, data=None):
     thread_list = []
@@ -94,10 +95,11 @@ class KMeans():
         else:
             raise ValueError('Unknown metric: {}'.format(metric))
         self.icntr += 1
-        text = '      progress: {:.2f}k / {:.2f}k'.format(self.icntr / 1000, self.x_len * self.c_len / 1000)
-        digits = len(text)
-        delete = '\r' * digits
-        print('{0}{1}'.format(delete, text), end='')
+        if not QUIET:
+            text = '      progress: {:.2f}k / {:.2f}k'.format(self.icntr / 1000, self.x_len * self.c_len / 1000)
+            digits = len(text)
+            delete = '\r' * digits
+            print('{0}{1}'.format(delete, text), end='')
         return r
 
     def stop(self, iter, old, new, lold, lnew):
@@ -155,8 +157,9 @@ class KMeans():
         # get length of lists
         self.c_len = len(C)
         self.x_len = len(X)
-        print('Now {} points will be clustering to {} clusters'.format(self.x_len, self.c_len))
-        print('Threads count: {}; log: {}'.format(THREADS, self.log))
+        if not QUIET:
+            print('Now {} points will be clustering to {} clusters'.format(self.x_len, self.c_len))
+            print('Threads count: {}; log: {}'.format(THREADS, self.log))
 
         self.L = np.empty([self.x_len])
         self.C = C
@@ -175,12 +178,14 @@ class KMeans():
             # reset population in clusters
             self.P = np.zeros([self.c_len])
             # show iteration number
-            print('Iteration {}'.format(iteration + 1))
+            if not QUIET:
+                print('Iteration {}'.format(iteration + 1))
             # create empty python array
             # each item will contain all the points belongs to specific cluster
             self.A = [np.empty([0, 2]) for i in range(self.c_len)]
             # for each point
-            print('  assigning points')
+            if not QUIET:
+                print('  assigning points')
             l_old = np.array(self.L)
             if not self._continue:
                 res = async_worker(range(self.x_len), self.xloop)
@@ -217,7 +222,8 @@ class KMeans():
             # array for calculated centers of clusters
             mu = np.empty([self.c_len, 3], dtype='object')
 
-            print('\n  calculating new centers')
+            if not QUIET:
+                print('\n  calculating new centers')
             # for each cluster
             i = 0
             while i < self.c_len:
@@ -231,30 +237,34 @@ class KMeans():
                     mu[i] = np.append(d.astype(np.object), i)
                 i += 1
             if self.stations:
-                print('  locating centers on roadmap')
+                if not QUIET:
+                    print('  locating centers on roadmap')
                 for c in range(self.c_len):
-                    text = '      progress: {} / {}'.format(c + 1, self.c_len)
-                    digits = len(text)
-                    delete = '\r' * digits
-                    print('{0}{1}'.format(delete, text), end='')
+                    if not QUIET:
+                        text = '      progress: {} / {}'.format(c + 1, self.c_len)
+                        digits = len(text)
+                        delete = '\r' * digits
+                        print('{0}{1}'.format(delete, text), end='')
                     new = self.route_.locate(mu[c][:2])
                     mu[c][0], mu[c][1] = new[0], new[1]
-            print('  replacing old centers with new')
+            if not QUIET:
+                print('  replacing old centers with new')
             # equate current centroids to calculated
             self.C = mu
             # increment iteration counter
             iteration += 1
-            print('  iteration end: {:.2f}k distance calculations'.format(self.icntr / 1000))
-            iter_time = time.time() - time_start
-            if iter_time > 86400:
-                iter_time = '{:.4f} days'.format(iter_time / 86400)
-            elif iter_time > 3600:
-                iter_time = '{:.4f} hours'.format(iter_time / 3600)
-            elif iter_time > 60:
-                iter_time = '{:.4f} minutes'.format(iter_time / 60)
-            else:
-                iter_time = '{:.4f} seconds'.format(iter_time)
-            print(' ' * 17 + '{}'.format(iter_time))
+            if not QUIET:
+                print('  iteration end: {:.2f}k distance calculations'.format(self.icntr / 1000))
+                iter_time = time.time() - time_start
+                if iter_time > 86400:
+                    iter_time = '{:.4f} days'.format(iter_time / 86400)
+                elif iter_time > 3600:
+                    iter_time = '{:.4f} hours'.format(iter_time / 3600)
+                elif iter_time > 60:
+                    iter_time = '{:.4f} minutes'.format(iter_time / 60)
+                else:
+                    iter_time = '{:.4f} seconds'.format(iter_time)
+                print(' ' * 17 + '{}'.format(iter_time))
             self.icntr = 0
         # record results
         self.cluster_centers_ = self.C
@@ -295,14 +305,18 @@ class KMeansClusteringMachine(ClusteringMachine):
 
     def __init__(self, X, init='random', count=40, grid_size=[7, 7],
                  filename='init.txt', max_iter=100, log=True,
-                 thread_cound=4, start=False, stations=False):
+                 thread_cound=4, start=False, stations=False, quiet=False,
+                 cenpar=[]):
         global POOL
         global THREADS
+        global QUIET
         THREADS = thread_cound
         POOL = ThreadPool(processes=THREADS)
+        QUIET = quiet
 
         self.X = X
 
+        # move init machine to outer script
         self.initM = InitMachine()
 
         self.bounds = self.getBounds(points=X)
@@ -311,7 +325,7 @@ class KMeansClusteringMachine(ClusteringMachine):
         elif init == 'grid':
             self.initM.grid(gridSize=grid_size, bounds=self.bounds)
         elif init == 'file':
-            self.initM.file(filename=filename)
+            self.initM.file(filename=filename, params=cenpar)
         else:
             print('Unrecognized init type: {}'.format(init))
         self.cluster_centers = self.initM.getCenters()

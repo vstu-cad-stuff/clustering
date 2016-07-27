@@ -57,21 +57,35 @@ class InitMachine():
                 [[random.uniform(bounds[0], bounds[2]),
                   random.uniform(bounds[1], bounds[3]), i]], axis=0)
 
-    def file(self, filename):
+    def file(self, filename, JSON=True, params=[]):
         """ Initialize centers by random.
 
         Parameters
         ----------
         filename : int
             Specify source file name.
+        JSON : boolean, default True
+            If true, use json to parse source file.
+        params : list, default empty list
+            Specifies types of points which will be loaded.
         """
         with open(filename, 'r') as file_:
-            centers = json.load(file_)
-        for i in centers:
-            centers[int(i[2])] = np.array(i[:3], dtype='object')
-            centers[int(i[2])][0] = float(centers[int(i[2])][0])
-            centers[int(i[2])][1] = float(centers[int(i[2])][1])
-            centers[int(i[2])][2] = int(centers[int(i[2])][2])
+            arr = json.load(file_)
+            centers = np.empty((0, 3), object)
+        if JSON:
+            k = 0
+        for i in arr:
+            if JSON:
+                if str(i['type']) in params or params == []:
+                    lat, lon, id = float(i['lat']), float(i['lon']), k
+                    center = np.array([[lat, lon, id]], dtype='object')
+                    centers = np.append(centers, center, axis=0)
+            else:
+                lat = float(arr[int(i[2])][0])
+                lon = float(arr[int(i[2])][1])
+                id = int(arr[int(i[2])][2])
+                center = np.array([[lat, lon, id]], dtype='object')
+                centers = np.append(centers, center, axis=0)
         self.centers = centers
 
     def getCenters(self):

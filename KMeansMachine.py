@@ -13,11 +13,11 @@ THREADS = 4
 POOL = ThreadPool(processes=THREADS)
 QUIET = False
 
-def async_worker(iterator, func, data=None):
+def asyncWorker(iterator, func, data=None):
     thread_list = []
     result = []
     for item in iterator:
-        # create job for new_route function
+        # create job for function
         thread = POOL.apply_async(func, (item, data))
         # add thread in list
         thread_list.append(thread)
@@ -38,34 +38,34 @@ class KMeans():
 
     Attributes
     ----------
-    max_iter_ : int
+    maxIter : int
         Maximum iteration number. After reaching it, clustering is
         considered as completed.
-    cluster_centers_ : array, [n_clusters, n_dimensions + 1]
+    clusterCenters : array, [n_clusters, n_dimensions + 1]
         Centers of clusters.
-    labels_ : array, [n_points]
+    labels : array, [n_points]
         Labels of points.
 
     Parameters
     ----------
-    max_iter : int
+    maxIter : int
         Set maximum iteration number.
     """
-    max_iter_ = None
-    cluster_centers_ = None
-    labels_ = None
-    population_ = None
+    maxIter = None
+    clusterCenters = None
+    labels = None
+    population = None
     log = False
-    _continue = False
-    route_ = None
+    continue_ = False
+    route = None
     icntr = 0
 
-    def __init__(self, max_iter, log, start, stations, map_):
-        self.max_iter_ = max_iter
+    def __init__(self, maxIter, log, start, stations, map_):
+        self.maxIter = maxIter
         self.log = log
-        self._continue = start
+        self.continue_ = start
         self.stations = stations
-        self.route_ = route()
+        self.route = route()
         self.map_ = map_
 
     def dist(self, a, b, metric):
@@ -84,7 +84,7 @@ class KMeans():
             Distance between points.
         """
         if metric == 'route':
-            r = self.route_.route_distance(a, b)
+            r = self.route.route_distance(a, b)
         elif metric == 'euclid':
             r = np.sqrt((b[0] - a[0]) ** 2 + (b[1] - a[1]) ** 2)
         elif metric == 'surface':
@@ -116,7 +116,7 @@ class KMeans():
         stop : boolean
             If true, clustering is completed.
         """
-        if iter >= self.max_iter_:
+        if iter >= self.maxIter:
             return True
         return np.array_equal(old, new) or np.array_equal(lold, lnew)
 
@@ -167,8 +167,8 @@ class KMeans():
         self.sleeping = 0
 
         if self.metric == 'route' or self.stations:
-            self.route_.start(loud=self.map_[0], map_=self.map_[1])
-            self.sleeping += self.route_.sleep
+            self.route.start(loud=self.map_[0], map_=self.map_[1])
+            self.sleeping += self.route.sleep
         # while clustering isn't completed
         while not self.stop(iteration, c_old, self.C, l_old, self.L):
             time_start = time.time()
@@ -184,8 +184,8 @@ class KMeans():
             if not QUIET:
                 print('  assigning points')
             l_old = np.array(self.L)
-            if not self._continue:
-                res = async_worker(range(self.x_len), self.xloop)
+            if not self.continue_:
+                res = asyncWorker(range(self.x_len), self.xloop)
                 # res = list(POOL.map(self.xloop, range(self.x_len)))
                 # res = list(map(self.xloop, range(self.x_len)))
                 # equate the previous and current centers of clusters
@@ -211,10 +211,10 @@ class KMeans():
                     dump(xc, filename)
             else:
                 self.L = np.array([])
-                for i in json.load(open(self._continue)):
+                for i in json.load(open(self.continue_)):
                     self.L = np.append(self.L, i[2])
                     self.A[int(i[2])] = np.append(self.A[int(i[2])], [[i[0], i[1]]], axis=0)
-                self._continue = False
+                self.continue_ = False
 
             # array for calculated centers of clusters
             mu = np.empty([self.c_len, 3], dtype='object')
@@ -242,7 +242,7 @@ class KMeans():
                         digits = len(text)
                         delete = '\r' * digits
                         print('{0}{1}'.format(delete, text), end='')
-                    new = self.route_.locate(mu[c][:2])
+                    new = self.route.locate(mu[c][:2])
                     mu[c][0], mu[c][1] = new[0], new[1]
             if not QUIET:
                 print('  replacing old centers with new')
@@ -264,11 +264,11 @@ class KMeans():
                 print(' ' * 17 + '{}'.format(iter_time))
             self.icntr = 0
         # record results
-        self.cluster_centers_ = self.C
-        self.labels_ = self.L
-        self.population_ = self.P
+        self.clusterCenters = self.C
+        self.labels = self.L
+        self.population = self.P
         if self.metric == 'route' or self.stations:
-            self.route_.stop()
+            self.route.stop()
 
 class KMeansClusteringMachine(ClusteringMachine):
     """ A derived class from ClusteringMachine.
@@ -281,31 +281,31 @@ class KMeansClusteringMachine(ClusteringMachine):
         Coordinates of points.
     init : array, [n_points, n_dimensions + 1]
         Initial clusters' distribution.
-    max_iter : int, default 100
+    maxIter : int, default 100
         Set maximum iteration number.
     log : boolean / string, default False
         If set to not false, clusters' centers and points will be
         recorded on each iteration.
-    thread_cound : positive int, default 4
+    threadCound : positive int, default 4
 
     start: boolean / array
     """
 
-    def __init__(self, X, init, max_iter=100, log=False, thread_cound=4,
+    def __init__(self, X, init, maxIter=100, log=False, threadCound=4,
                  start=False, stations=False, quiet=False, map_=(False, '')):
         global POOL
         global THREADS
         global QUIET
-        if thread_cound < 1:
+        if threadCound < 1:
             THREADS = 1
         else:
-            THREADS = thread_cound
+            THREADS = threadCound
         POOL = ThreadPool(processes=THREADS)
         QUIET = quiet
 
         self.X = X
-        self.cluster_centers = init
-        self.cluster_instance = KMeans(max_iter=max_iter, log=log, start=start,
+        self.clusterCenters = init
+        self.clusterInstance = KMeans(maxIter=maxIter, log=log, start=start,
                                        stations=stations, map_=map_)
 
     def fit(self, metric='route'):
@@ -314,22 +314,22 @@ class KMeansClusteringMachine(ClusteringMachine):
         """
         t_start = time.time()
         # perform clustering
-        self.cluster_instance.fit(self.X, self.cluster_centers, metric)
+        self.clusterInstance.fit(self.X, self.clusterCenters, metric)
         # calculate time
-        self.fit_time = time.time() - t_start - self.cluster_instance.sleeping
-        if self.fit_time > 86400:
-            self.fit_time = '{:.4f} days'.format(self.fit_time / 86400)
-        elif self.fit_time > 3600:
-            self.fit_time = '{:.4f} hours'.format(self.fit_time / 3600)
-        elif self.fit_time > 60:
-            self.fit_time = '{:.4f} minutes'.format(self.fit_time / 60)
+        self.fitTime = time.time() - t_start - self.clusterInstance.sleeping
+        if self.fitTime > 86400:
+            self.fitTime = '{:.4f} days'.format(self.fitTime / 86400)
+        elif self.fitTime > 3600:
+            self.fitTime = '{:.4f} hours'.format(self.fitTime / 3600)
+        elif self.fitTime > 60:
+            self.fitTime = '{:.4f} minutes'.format(self.fitTime / 60)
         else:
-            self.fit_time = '{:.4f} seconds'.format(self.fit_time)
+            self.fitTime = '{:.4f} seconds'.format(self.fitTime)
         # get points labels
-        self.labels = self.cluster_instance.labels_
+        self.labels = self.clusterInstance.labels
         # get clusters population
-        self.population = self.cluster_instance.population_
+        self.population = self.clusterInstance.population
         # get cluster centers
-        self.cluster_centers = self.cluster_instance.cluster_centers_
+        self.clusterCenters = self.clusterInstance.clusterCenters
         # get clusters number
-        self.n_cluster = len(np.unique(self.labels))
+        self.numCluster = len(np.unique(self.labels))

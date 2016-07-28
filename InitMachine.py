@@ -13,30 +13,30 @@ class InitMachine():
     """
     centers = np.empty([0, 3], dtype='object')
 
-    def grid(self, gridSize, bounds):
-        """ Initialize centers by grid.
+    def grid(self, grid, bounds):
+        """ Initialize centers on grid.
 
         Parameters
         ----------
-        gridSize : array {size_x, size_y}
+        grid : array {size_x, size_y}
             Set grid size.
         bounds : array {bottom_border, left_border, top_border, right_border}
             Specify borders.
         """
-        delta_lt = (bounds[2] - bounds[0]) / gridSize[0]
-        delta_ln = (bounds[3] - bounds[1]) / gridSize[1]
+        delta_lt = (bounds[2] - bounds[0]) / grid[0]
+        delta_ln = (bounds[3] - bounds[1]) / grid[1]
         curr_lt = bounds[0] + delta_lt / 2
         curr_ln = bounds[1] + delta_ln / 2
 
         self.centers = np.append(self.centers,
             [[curr_lt, curr_ln, 0]], axis=0)
-        for i in range(gridSize[0] * gridSize[1]):
+        for i in range(grid[0] * grid[1]):
             if curr_ln + delta_ln > bounds[3]:
                 if curr_lt + delta_lt > bounds[2]:
                     break
                 else:
                     curr_lt += delta_lt
-                    curr_ln -= delta_ln * (gridSize[0] - 1)
+                    curr_ln -= delta_ln * (grid[0] - 1)
             else:
                 curr_ln += delta_ln
             self.centers = np.append(self.centers,

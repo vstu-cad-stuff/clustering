@@ -26,13 +26,13 @@ class DataCollector():
         try:
             with open(filename) as file_:
                 # create an empty array for points
-                data_ = np.empty((0, 2), float)
+                data = np.empty((0, 2), float)
                 arr = json.loads(file_.readlines()[0])
                 for i in arr:
                     if str(i['type']) not in params:
                         lat, lon = float(i['lat']), float(i['lon'])
-                        data_ = np.append(data_, [[lat, lon]], axis=0)
-            self.data = data_
+                        data = np.append(data, [[lat, lon]], axis=0)
+            self.data = data
         # if error while reading file, print error message and clear data array
         except IOError as e:
             print('{}'.format(e))

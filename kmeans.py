@@ -10,7 +10,7 @@ parser.add_argument('-n', '--iteration', type=int, help='Iterations count.', def
 parser.add_argument('-i', '--init', help='Type of init.', choices=['file', 'random', 'grid'], default='file')
 parser.add_argument('-t', '--threads', type=int, help='Number of threads', default=4)
 parser.add_argument('-q', '--nolog', help='Do not log iteration result', action='store_true')
-parser.add_argument('--use_triangle', help='Use triangle inequality to reduce calculations.', action='store_true')
+parser.add_argument('--usetriangle', help='Use triangle inequality to reduce calculations.', action='store_true')
 parser.add_argument('--stations', help='Locate clusters to roadmap network.', action='store_true')
 parser.add_argument('-c', '--clusters', nargs='+', help='Load clusters from file with name as first argument.\n'
                           'If clusters should be load from specific points\' types, pass them to arguments after filename')
@@ -26,76 +26,81 @@ parser.add_argument('--loud', help='Print osrm responces', action='store_true')
 
 args = parser.parse_args()
 
-USE_TRIANGLE_INEQUALITY = args.use_triangle
+useTriangleInequality = args.usetriangle
 metric = args.metric.lower() # route, surface, euclid
-iterations_count = args.iteration
-thread_count = args.threads
-_continue = args.start
+iterationsCount = args.iteration
+threadCount = args.threads
+continue_ = args.start
 stations = args.stations
-map_parameters = (args.loud, args.map)
+mapParameters = (args.loud, args.map)
 
 try:
     filename = args.clusters[0]
-    cluster_params = args.clusters[1:]
+    clusterParams = args.clusters[1:]
 except:
     pass
 
 try:
     datafile = args.points[0]
-    points_params = args.points[1:]
+    pointsParams = args.points[1:]
 except:
     pass
 
 init = args.init
-log = args.clusters[0].split('.')[0] + '_log'
-if '/' in log:
-    log = log.split('/')[-1]
+if args.clusters is not None:
+    log = args.clusters[0].split('.')[0] + '_log'
+    if '/' in log:
+        log = log.split('/')[-1]
+else:
+    log = args.points[0].split('.')[0] + '_log'
+    if '/' in log:
+        log = log.split('/')[-1]
 export = log
 if args.nolog:
     log = False
 
-random_count = args.count
-grid_size = args.grid
+randomCount = args.count
+gridSize = args.grid
 
 # create DataCollector object
 dc = DataCollector()
 # upload data from datafile
-dc.uploadFromTextFile(datafile, params=points_params)
+dc.uploadFromTextFile(datafile, params=pointsParams)
 # get data from dc object
 X = dc.getData()
 
 initM = InitMachine()
 if init == 'random':
     bounds = initM.getBounds(X)
-    initM.random(count=count, bounds=bounds)
+    initM.random(count=randomCount, bounds=bounds)
 elif init == 'grid':
     bounds = initM.getBounds(X)
-    initM.grid(gridSize=grid_size, bounds=bounds)
+    initM.grid(grid=gridSize, bounds=bounds)
 elif init == 'file':
-    initM.file(filename=filename, params=cluster_params)
+    initM.file(filename=filename, params=clusterParams)
 else:
     print('Unrecognized init type: {}'.format(init))
 clusters = initM.getCenters()
+# export init centers to 'init.txt'
+# initM.exportCentersToTextFile('init.txt')
 
 # create KMeansClusteringMachine object with specified parameters
-if USE_TRIANGLE_INEQUALITY:
+if useTriangleInequality:
     print('This part is not completed, sorry.')
     exit()
-    # km = kmeans_triangle(X, init=init, filename=filename, max_iter=iterations_count,
-    #                      log=log, count=random_count, gridSize=grid_size)
+    # km = kmeans_triangle(X, init=init, filename=filename, maxIter=iterationsCount,
+    #                      log=log, count=randomCount, gridSize=gridSize)
 else:
-    km = kmeans(X, clusters, max_iter=iterations_count, log=log,
-                thread_cound=thread_count, start=_continue, stations=stations,
-                quiet=args.quiet, map_=map_parameters)
+    km = kmeans(X, clusters, maxIter=iterationsCount, log=log,
+                threadCound=threadCount, start=continue_, stations=stations,
+                quiet=args.quiet, map_=mapParameters)
 
 # perform clustering
 km.fit(metric)
 # print info
 if not args.quiet:
-    print('Fit time: {}, clusters: {}'.format(km.fit_time, km.n_cluster))
+    print('Fit time: {}, clusters: {}'.format(km.fitTime, km.numCluster))
 
-# export init centers to 'k_init.txt'
-# km.initM.exportCentersToTextFile('init.txt')
 if not log:
     # export centers to 'centers.js'
     km.exportCentersToTextFile('{}_cls.js'.format(export))

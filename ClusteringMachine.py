@@ -17,22 +17,22 @@ class ClusteringMachine():
         Coordinates of points.
     labels : array, [n_points]
         Labels of each point.
-    cluster_centers : array, [n_clusters, n_dimensions]
+    clusterCenters : array, [n_clusters, n_dimensions]
         Coordinates of cluster centers.
-    n_cluster : int
+    numCluster : int
         Number of clusters.
-    cluster_instance : class
+    clusterInstance : class
         Class used for clustering.
-    fit_time : float
+    fitTime : float
         Time of clustering.
     """
     X = None
     labels = None
     population = None
-    cluster_centers = None
-    n_cluster = None
-    cluster_instance = None
-    fit_time = 0
+    clusterCenters = None
+    numCluster = None
+    clusterInstance = None
+    fitTime = 0
 
     def __init__(self, X):
         self.X = X
@@ -41,7 +41,7 @@ class ClusteringMachine():
         """ Perform clustering.
 
         """
-        self.cluster_instance.fit(self.X)
+        self.clusterInstance.fit(self.X)
 
     def plotClusters(self, plotCenters = True):
         """ Plot the results of clustering.
@@ -66,8 +66,8 @@ class ClusteringMachine():
                      colors[self.labels[i]], markersize = 5)
         # if plotCenters set to True, plot cluster centers as "X" marks
         if plotCenters:
-            plt.scatter(self.cluster_centers[:, 0],
-                        self.cluster_centers[:, 1], marker = "x",
+            plt.scatter(self.clusterCenters[:, 0],
+                        self.clusterCenters[:, 1], marker = "x",
                         s = 150, linewidths = 2.5, zorder = 10)
         # showing result
         plt.show()
@@ -84,7 +84,7 @@ class ClusteringMachine():
         -----
         Uses JSON data format.
         """
-        cc = map(lambda x, y: (np.append(x, y)).tolist(), self.cluster_centers, self.population)
+        cc = map(lambda x, y: (np.append(x, y)).tolist(), self.clusterCenters, self.population)
         cc = list(map(lambda i: {'lat': i[0], 'lon': i[1], 'id': i[2], 'pop': i[3]}, cc))
 
         try:

@@ -12,9 +12,8 @@ parser.add_argument('-t', '--threads', type=int, help='Number of threads', defau
 parser.add_argument('-q', '--nolog', help='Do not log iteration result', action='store_true')
 parser.add_argument('--use_triangle', help='Use triangle inequality to reduce calculations.', action='store_true')
 parser.add_argument('--stations', help='Locate clusters to roadmap network.', action='store_true')
-parser.add_argument('-c', '--clusters', help='Load clusters from file with name as first argument.\n'
-                          'If clusters should be load from specific points\' types, pass them to arguments after filename',
-                          nargs='+', required=True)
+parser.add_argument('-c', '--clusters', nargs='+', help='Load clusters from file with name as first argument.\n'
+                          'If clusters should be load from specific points\' types, pass them to arguments after filename')
 parser.add_argument('-p', '--points', help='Load points from file with name as first argument.\n'
                           'If points shouldn\'t be load from specific points\' types, pass them to arguments after filename',
                           nargs='+', required=True)
@@ -22,6 +21,8 @@ parser.add_argument('-r', '--count', type=int, help='Number of clusters if "init
 parser.add_argument('-g', '--grid', type=int, nargs=2, help='Size of grid if "init" is set to "grid"', default=[7, 7])
 parser.add_argument('--start', help="Result of previous work, points file. Continue calculations from this step.")
 parser.add_argument('-q!', '--quiet', help='Be quiet', action='store_true')
+parser.add_argument('--map', help='OSRM map to load by osrm-routed process')
+parser.add_argument('--loud', help='Print osrm responces', action='store_true')
 
 args = parser.parse_args()
 
@@ -31,10 +32,15 @@ iterations_count = args.iteration
 thread_count = args.threads
 _continue = args.start
 stations = args.stations
+map_parameters = (args.loud, args.map)
 
 try:
     filename = args.clusters[0]
     cluster_params = args.clusters[1:]
+except:
+    pass
+
+try:
     datafile = args.points[0]
     points_params = args.points[1:]
 except:
@@ -80,7 +86,7 @@ if USE_TRIANGLE_INEQUALITY:
 else:
     km = kmeans(X, clusters, max_iter=iterations_count, log=log,
                 thread_cound=thread_count, start=_continue, stations=stations,
-                quiet=args.quiet)
+                quiet=args.quiet, map_=map_parameters)
 
 # perform clustering
 km.fit(metric)

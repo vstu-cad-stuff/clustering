@@ -60,12 +60,13 @@ class KMeans():
     route_ = None
     icntr = 0
 
-    def __init__(self, max_iter, log, start, stations):
+    def __init__(self, max_iter, log, start, stations, map_):
         self.max_iter_ = max_iter
         self.log = log
         self._continue = start
         self.stations = stations
         self.route_ = route()
+        self.map_ = map_
 
     def dist(self, a, b, metric):
         """ Calculate distance between two points.
@@ -88,9 +89,6 @@ class KMeans():
             r = np.sqrt((b[0] - a[0]) ** 2 + (b[1] - a[1]) ** 2)
         elif metric == 'surface':
             r = Geodesic.WGS84.Inverse(a[0], a[1], b[0], b[1])['s12']
-            #d = np.arccos(np.sin(a[0]) * np.sin(b[0]) + np.cos(a[0]) * np.cos(b[0]) * np.cos(b[1] - a[1]))
-            #R = 6371. # Earth radius
-            #r = d * R
         else:
             raise ValueError('Unknown metric: {}'.format(metric))
         self.icntr += 1
@@ -169,7 +167,7 @@ class KMeans():
         self.sleeping = 0
 
         if self.metric == 'route' or self.stations:
-            self.route_.start()
+            self.route_.start(loud=self.map_[0], map_=self.map_[1])
             self.sleeping += self.route_.sleep
         # while clustering isn't completed
         while not self.stop(iteration, c_old, self.C, l_old, self.L):
@@ -294,7 +292,7 @@ class KMeansClusteringMachine(ClusteringMachine):
     """
 
     def __init__(self, X, init, max_iter=100, log=False, thread_cound=4,
-                 start=False, stations=False, quiet=False, cenpar=[]):
+                 start=False, stations=False, quiet=False, map_=(False, '')):
         global POOL
         global THREADS
         global QUIET
@@ -307,7 +305,8 @@ class KMeansClusteringMachine(ClusteringMachine):
 
         self.X = X
         self.cluster_centers = init
-        self.cluster_instance = KMeans(max_iter=max_iter, log=log, start=start, stations=stations)
+        self.cluster_instance = KMeans(max_iter=max_iter, log=log, start=start,
+                                       stations=stations, map_=map_)
 
     def fit(self, metric='route'):
         """ Perform clustering.

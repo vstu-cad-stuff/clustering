@@ -13,17 +13,13 @@ class DataCollector():
 
     data = np.array([])
 
-    def uploadFromTextFile(self, filename, JSON=True, delimiter=',', params=[]):
+    def uploadFromTextFile(self, filename, params=[]):
         """ Upload data from text file.
 
         Parameters
         ----------
         filename : string path
             Name of data source file.
-        JSON : boolean, default True
-            If true, use json to parse source file.
-        delimiter : string, default ','
-            Sets source file data delimiter.
         params : list, default empty list
             Specifies types of points which will not be loaded.
         """
@@ -31,17 +27,10 @@ class DataCollector():
             with open(filename) as file_:
                 # create an empty array for points
                 data_ = np.empty((0, 2), float)
-                if JSON:
-                    arr = json.loads(file_.readlines()[0])
-                    for i in arr:
-                        if str(i['type']) not in params:
-                            lat, lon = float(i['lat']), float(i['lon'])
-                            data_ = np.append(data_, [[lat, lon]], axis=0)
-                else:
-                    # for each line in file read latitude and longitude of point
-                    # and record them to data array
-                    for line in file_:
-                        lat, lon = [float(n) for n in line.split(delimiter)[:]]
+                arr = json.loads(file_.readlines()[0])
+                for i in arr:
+                    if str(i['type']) not in params:
+                        lat, lon = float(i['lat']), float(i['lon'])
                         data_ = np.append(data_, [[lat, lon]], axis=0)
             self.data = data_
         # if error while reading file, print error message and clear data array

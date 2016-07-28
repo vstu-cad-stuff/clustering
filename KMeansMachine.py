@@ -6,7 +6,6 @@ import os
 from geographiclib.geodesic import Geodesic
 
 from routelib import route
-from InitMachine import InitMachine
 from ClusteringMachine import ClusteringMachine
 
 from multiprocessing.dummy import Pool as ThreadPool
@@ -282,87 +281,33 @@ class KMeansClusteringMachine(ClusteringMachine):
     ----------
     X : array, [n_points, n_dimensions]
         Coordinates of points.
-    init : string, default 'random'
-        Specify the initializing type.
-    count : int, default 40
-        Set clusters count (in random initializing).
-    gridSize : array {size_x, size_y}, default [7, 7]
-        Set size of grid (in grid initializing).
-    filename : string path, default 'init.txt'
-        Specify the name of initialize file (in file initializing).
+    init : array, [n_points, n_dimensions + 1]
+        Initial clusters' distribution.
     max_iter : int, default 100
         Set maximum iteration number.
+    log : boolean / string, default False
+        If set to not false, clusters' centers and points will be
+        recorded on each iteration.
+    thread_cound : positive int, default 4
 
-    Attributes
-    ----------
-    initM : InitMachine object
-        Initializes centers of clusters.
-    bounds : array {bottom_border, left_border, top_border, right_border}
-        Bounds of initial centers generation.
+    start: boolean / array
     """
-    initM = None
-    bounds = None
 
-    def __init__(self, X, init='random', count=40, grid_size=[7, 7],
-                 filename='init.txt', max_iter=100, log=True,
-                 thread_cound=4, start=False, stations=False, quiet=False,
-                 cenpar=[]):
+    def __init__(self, X, init, max_iter=100, log=False, thread_cound=4,
+                 start=False, stations=False, quiet=False, cenpar=[]):
         global POOL
         global THREADS
         global QUIET
-        THREADS = thread_cound
+        if thread_cound < 1:
+            THREADS = 1
+        else:
+            THREADS = thread_cound
         POOL = ThreadPool(processes=THREADS)
         QUIET = quiet
 
         self.X = X
-
-        # move init machine to outer script
-        self.initM = InitMachine()
-
-        self.bounds = self.getBounds(points=X)
-        if init == 'random':
-            self.initM.random(count=count, bounds=self.bounds)
-        elif init == 'grid':
-            self.initM.grid(gridSize=grid_size, bounds=self.bounds)
-        elif init == 'file':
-            self.initM.file(filename=filename, params=cenpar)
-        else:
-            print('Unrecognized init type: {}'.format(init))
-        self.cluster_centers = self.initM.getCenters()
+        self.cluster_centers = init
         self.cluster_instance = KMeans(max_iter=max_iter, log=log, start=start, stations=stations)
-
-    def getBounds(self, points):
-        """ Calculate bounds of initial centers generation.
-
-        Parameters
-        ----------
-        points : array [n_points, n_dimensions]
-            Coordinates of points
-
-        Returns
-        -------
-        bounds : array {bottom_border, left_border, top_border, right_border}
-            Bounds of initial centers generation.
-        """
-        bounds = None
-        if points == None:
-            print('No source to get bounds')
-        else:
-            # if points are setted, choose four coordinates
-            # of different points as bounds:
-            # most bottom, most left, most top, and most right
-            b, l, t, r = [points[0]] * 4
-            for p in points[1:]:
-                if p[0] > t[0]:
-                    t = p
-                if p[0] < b[0]:
-                    b = p
-                if p[1] > r[1]:
-                    r = p
-                if p[1] < l[1]:
-                    l = p
-            bounds = [b[0], l[1], t[0], r[1]]
-        return bounds
 
     def fit(self, metric='route'):
         """ Perform clustering.

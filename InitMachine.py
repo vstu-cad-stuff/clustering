@@ -57,35 +57,26 @@ class InitMachine():
                 [[random.uniform(bounds[0], bounds[2]),
                   random.uniform(bounds[1], bounds[3]), i]], axis=0)
 
-    def file(self, filename, JSON=True, params=[]):
+    def file(self, filename, params=[]):
         """ Initialize centers by random.
 
         Parameters
         ----------
         filename : int
             Specify source file name.
-        JSON : boolean, default True
-            If true, use json to parse source file.
         params : list, default empty list
             Specifies types of points which will be loaded.
         """
         with open(filename, 'r') as file_:
             arr = json.load(file_)
-            centers = np.empty((0, 3), object)
-        if JSON:
-            k = 0
+        centers = np.empty((0, 3), object)
+        k = 0
         for i in arr:
-            if JSON:
-                if str(i['type']) in params or params == []:
-                    lat, lon, id = float(i['lat']), float(i['lon']), k
-                    center = np.array([[lat, lon, id]], dtype='object')
-                    centers = np.append(centers, center, axis=0)
-            else:
-                lat = float(arr[int(i[2])][0])
-                lon = float(arr[int(i[2])][1])
-                id = int(arr[int(i[2])][2])
+            if str(i['type']) in params or params == []:
+                lat, lon, id = float(i['lat']), float(i['lon']), k
                 center = np.array([[lat, lon, id]], dtype='object')
                 centers = np.append(centers, center, axis=0)
+                k += 1
         self.centers = centers
 
     def getCenters(self):
@@ -117,3 +108,36 @@ class InitMachine():
                 json.dump(self.centers.tolist(), file_)
         except IOError as e:
             print('{}'.format(e))
+
+    def getBounds(self, points):
+        """ Calculate bounds of initial centers generation.
+
+        Parameters
+        ----------
+        points : array [n_points, n_dimensions]
+            Coordinates of points
+
+        Returns
+        -------
+        bounds : array {bottom_border, left_border, top_border, right_border}
+            Bounds of initial centers generation.
+        """
+        bounds = None
+        if points == None:
+            print('No source to get bounds')
+        else:
+            # if points are setted, choose four coordinates
+            # of different points as bounds:
+            # most bottom, most left, most top, and most right
+            b, l, t, r = [points[0]] * 4
+            for p in points[1:]:
+                if p[0] > t[0]:
+                    t = p
+                if p[0] < b[0]:
+                    b = p
+                if p[1] > r[1]:
+                    r = p
+                if p[1] < l[1]:
+                    l = p
+            bounds = [b[0], l[1], t[0], r[1]]
+        return bounds

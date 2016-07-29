@@ -36,8 +36,8 @@ def action(param_list):
     last = param_list['last']
     log = param_list['log']
     metric = param_list['metric']
-    filecen = '{}_{}c.js'.format(log, metric[0])
-    filepoi = '{}_{}p.js'.format(log, metric[0])
+    filecen = '{}_{}c.js'.format(log.replace('/', ''), metric[0])
+    filepoi = '{}_{}p.js'.format(log.replace('/', ''), metric[0])
 
     centers = []
     hulls = []

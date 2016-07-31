@@ -23,7 +23,7 @@ class route():
     """ A class for getting distance between points by finding a route.
 
     Uses OSRM-Project API for routing. It sends requests to local OSRM machine
-    and gets distance from json-formatted responce.
+    and gets distance from json-formatted response.
 
     Attributes
     ----------
@@ -59,12 +59,12 @@ class route():
         a = [44.27, 48.41]
         url = 'http://localhost:5000/nearest/v1/car/{},{}'.format(*a[::-1])
         try:
-            responce = urlopen(url)
+            response = urlopen(url)
             if not PYTHON2:
-                responce = responce.readall().decode('utf-8')
-                data = json.loads(responce)
+                response = response.readall().decode('utf-8')
+                data = json.loads(response)
             else:
-                data = json.load(responce)
+                data = json.load(response)
             try:
                 code = data['code']
                 self.API = 5
@@ -88,14 +88,14 @@ class route():
             url = 'http://localhost:5000/route/v1/car/{},{};{},{}?overview=false' \
                 '&alternatives=false&steps=false'.format(*np.append(a[::-1], b[::-1]))
 
-        # get responce
-        responce = urlopen(url)
+        # get response
+        response = urlopen(url)
         # parse json
         if not PYTHON2:
-            responce = responce.readall().decode('utf-8')
-            data = json.loads(responce)
+            response = response.readall().decode('utf-8')
+            data = json.loads(response)
         else:
-            data = json.load(responce)
+            data = json.load(response)
 
         # if route isn't found
         if self.API == 4:

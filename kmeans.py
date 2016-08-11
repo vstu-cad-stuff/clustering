@@ -1,7 +1,6 @@
 from DataCollector import DataCollector
 from InitMachine import InitMachine
 from KMeansMachine import KMeansClusteringMachine as kmeans
-from KMeansMachineTriangle import KMeansClusteringMachine as kmeans_triangle
 from argparse import ArgumentParser
 
 parser = ArgumentParser(description='k-Means clustering.')
@@ -10,7 +9,6 @@ parser.add_argument('-n', '--iteration', type=int, help='Iterations count.', def
 parser.add_argument('-i', '--init', help='Type of init.', choices=['file', 'random', 'grid'], default='file')
 parser.add_argument('-t', '--threads', type=int, help='Number of threads', default=4)
 parser.add_argument('-q', '--nolog', help='Do not log iteration result', action='store_true')
-parser.add_argument('--usetriangle', help='Use triangle inequality to reduce calculations.', action='store_true')
 parser.add_argument('--stations', help='Locate clusters to roadmap network.', action='store_true')
 parser.add_argument('-c', '--clusters', nargs='+', help='Load clusters from file with name as first argument.\n'
                           'If clusters should be load from specific points\' types, pass them to arguments after filename')
@@ -26,7 +24,6 @@ parser.add_argument('--loud', help='Print osrm responces', action='store_true')
 
 args = parser.parse_args()
 
-useTriangleInequality = args.usetriangle
 metric = args.metric.lower() # route, surface, euclid
 iterationsCount = args.iteration
 threadCount = args.threads
@@ -85,15 +82,9 @@ clusters = initM.getCenters()
 # initM.exportCentersToTextFile('init.txt')
 
 # create KMeansClusteringMachine object with specified parameters
-if useTriangleInequality:
-    print('This part is not completed, sorry.')
-    exit()
-    # km = kmeans_triangle(X, init=init, filename=filename, maxIter=iterationsCount,
-    #                      log=log, count=randomCount, gridSize=gridSize)
-else:
-    km = kmeans(X, clusters, maxIter=iterationsCount, log=log,
-                threadCound=threadCount, start=continue_, stations=stations,
-                quiet=args.quiet, map_=mapParameters)
+km = kmeans(X, clusters, maxIter=iterationsCount, log=log,
+            threadCound=threadCount, start=continue_, stations=stations,
+            quiet=args.quiet, map_=mapParameters)
 
 # perform clustering
 km.fit(metric)

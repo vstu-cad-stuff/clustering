@@ -7,7 +7,8 @@ Requires Python v2.7 / v3.x and installed
 [OSRM Server](https://github.com/Project-OSRM/osrm-backend/) for *route*
 metric.
 
-### Usage: run `kmeans.py` with `--help` argument:
+### Usage:
+run `kmeans.py` with `--help` argument:
 
     python3 kmeans.py --help
 
@@ -46,7 +47,7 @@ metric.
   distances between points with
   [OSRM](https://github.com/Project-OSRM/osrm-backend/).
 
-#### Examples
+### Examples
 Clustering of all data from `full` set by euclid metric with random initial
 distribution of cluster's centers. Number of clusters is 100, maximum iteration
 number is 50:
@@ -65,7 +66,7 @@ Clustering of all data types except type *"1"* from file `data.txt` by
 
     python3 kmeans.py -p data.txt 1 -c data.txt 1 -m surface -t 8
 
-#### Clean local repository
+### Clean local repository
 
 If you wish to clean untracked changes in local repository made since last commit:
 

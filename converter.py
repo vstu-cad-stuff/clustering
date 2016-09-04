@@ -2,6 +2,8 @@ import json
 import numpy as np
 from argparse import ArgumentParser
 
+JSON = False
+
 def rotate(a, b, c):
     return (b[1] - a[1]) * (c[0] - b[0]) - (b[0] - a[0]) * (c[1] - b[1])
 
@@ -51,7 +53,15 @@ def action(param_list):
         with open(filec, 'r') as file_:
             center = json.load(file_)
             # print('readed c#' + str(i))
-            centers.append(center)
+            if (JSON):
+                for k in center:
+                    id = k['id']
+                    lat = k['lat']
+                    lon = k['lon']
+                    pop = k['pop']
+                    centers.append([lat, lon, id, pop])
+            else:        
+                centers.append(center)
     json.dump(centers, File)
     File.close()
 
@@ -62,6 +72,14 @@ def action(param_list):
         with open(filep, 'r') as file_:
             points = json.load(file_)
             # print('readed p#' + str(i))
+        if (JSON):
+            p = []
+            for k in points:
+                id = k['clusterId']
+                lat = k['lat']
+                lon = k['lon']
+                p.append([lat, lon, id])
+            points = p
         mx = int(max(map(lambda k: k[2], points))) + 1
         ps = [np.empty([0, 3]) for each in range(0, mx)]
         for j in points:
@@ -89,8 +107,10 @@ parser.add_argument('-m', '--metric', choices=['route', 'euclid', 'surface'], he
 parser.add_argument('-l', '--last', type=int, help='Last iteration numer')
 parser.add_argument('-f', '--folder', help='Folder with data')
 parser.add_argument('-n', '--many', nargs='*', help='Multiple converts. Args order: folder1 metric1 last1 folder2 metric2 ...')
+parser.add_argument('-j', '--json', action='store_true', help='Use JSON to load files')
 
 args = parser.parse_args()
+JSON = args.json
 if args.many:
     folders = args.many[::3]
     metrics = args.many[1::3]

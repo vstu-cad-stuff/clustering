@@ -1,5 +1,5 @@
 from DataCollector import DataCollector
-from InitMachine import InitMachine
+import InitMachine
 from KMeansMachine import KMeansClusteringMachine as kmeans
 from argparse import ArgumentParser
 
@@ -32,13 +32,12 @@ dc.uploadFromTextFile(datafile, params=pointsParams)
 # get data from dc object
 X = dc.getData()
 
-initM = InitMachine()
 if args.random:
-    bounds = initM.getBounds(X)
-    initM.random(count=args.random, bounds=bounds)
+    bounds = InitMachine.getBounds(X)
+    clusters = InitMachine.random(count=args.random, bounds=bounds)
 elif args.grid:
-    bounds = initM.getBounds(X)
-    initM.grid(grid=args.grid, bounds=bounds)
+    bounds = InitMachine.getBounds(X)
+    clusters = InitMachine.grid(grid=args.grid, bounds=bounds)
 elif args.clusters:
     try:
         filename = args.clusters[0]
@@ -46,10 +45,9 @@ elif args.clusters:
     except:
         pass
 
-    initM.file(filename=filename, params=clusterParams)
+    clusters = InitMachine.file(filename=filename, params=clusterParams)
 else:
     print('Unrecognized init type: {}'.format(init))
-clusters = initM.getCenters()
 # export init centers to 'init.txt'
 # initM.exportCentersToTextFile('init.txt')
 

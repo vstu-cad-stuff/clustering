@@ -7,6 +7,7 @@ from geographiclib.geodesic import Geodesic
 
 from routelib import route
 from ClusteringMachine import ClusteringMachine
+from InitMachine import getBounds, grid
 
 from multiprocessing.dummy import Pool as ThreadPool
 THREADS = 4
@@ -43,6 +44,7 @@ class KMeans():
         self.maxIter = maxIter
         self.stations = stations
         self.route = route()
+        self.grid = 1
 
     def dist(self, a, b):
         #r = self.route.route_distance(a, b)

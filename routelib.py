@@ -39,7 +39,7 @@ class route():
     API = 5
     sleep = 5
 
-    def start(self, loud=False, map_=''):
+    def start(self, loud=False, map_='', dim=1):
         """ Start local OSRM machine.
 
         Needs time to start, contains a sleep statement.
@@ -195,6 +195,17 @@ class route():
                 else:
                     dist = self.viaroute(c, d)
         return dist
+
+    def make_table(self, X):
+        dim = len(X)
+
+        if self.osrm:
+            self.table = np.zeros([dim, dim])
+            for i in range(len(X)):
+                for j in range(i + 1, dim):
+                    self.table[i][j] = self.route_distance(X[i], X[j])
+                    self.table[j][i] = self.table[i][j]
+        return self.table
 
     def stop(self):
         """ Stop local OSRM machine.

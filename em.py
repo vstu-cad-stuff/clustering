@@ -1,23 +1,21 @@
 from DataCollector import DataCollector
 import InitMachine
-from KMeansMachine import KMeansClusteringMachine as kmeans
+from EMMachine import EMClusteringMachine as EM
 from argparse import ArgumentParser
 
-parser = ArgumentParser(description='k-Means clustering.')
+parser = ArgumentParser(description='EM clustering.')
 parser.add_argument('-n', '--iteration', type=int, help='Iterations count.', default=100)
-parser.add_argument('--stations', help='Locate clusters to roadmap network.', action='store_true')
 parser.add_argument('-c', '--clusters', nargs='+', help='Load clusters from file with name as first argument.\n'
                           'If clusters should be load from specific points\' types, pass them to arguments after filename')
 parser.add_argument('-p', '--points', help='Load points from file with name as first argument.\n'
                           'If points shouldn\'t be load from specific points\' types, pass them to arguments after filename',
                           nargs='+', required=True)
-parser.add_argument('-r', '--random', type=int, help='Number of clusters if "init" is set to "random"', default=40)
-parser.add_argument('-g', '--grid', type=int, nargs=2, help='Size of grid if "init" is set to "grid"', default=[7, 7])
+parser.add_argument('-r', '--random', type=int, help='Number of clusters if "init" is set to "random"')
+parser.add_argument('-g', '--grid', type=int, nargs=2, help='Size of grid if "init" is set to "grid"')
 
 args = parser.parse_args()
 
 iterationsCount = args.iteration
-stations = args.stations
 
 try:
     datafile = args.points[0]
@@ -51,16 +49,15 @@ else:
 # export init centers to 'init.txt'
 # initM.exportCentersToTextFile('init.txt')
 
-# create KMeansClusteringMachine object with specified parameters
-km = kmeans(X, clusters, maxIter=iterationsCount, stations=stations)
+# create EMClusteringMachine object with specified parameters
+em = EM(X, clusters, maxIter=iterationsCount)
 
 # perform clustering
-km.fit()
+em.fit()
 # print info
-if not args.quiet:
-    print('Fit time: {}, clusters: {}'.format(km.fitTime, km.numCluster))
+print('Fit time: {}, clusters: {}'.format(em.fitTime, em.numCluster))
 
 # export centers to 'centers.js'
-km.exportCentersToTextFile('{}_cls.js'.format('log'))
+em.exportCentersToTextFile('{}_cls.js'.format('log'))
 # export points to 'points.js'
-km.exportPointsToTextFile('{}_pts.js'.format('log'))
+em.exportPointsToTextFile('{}_pts.js'.format('log'))

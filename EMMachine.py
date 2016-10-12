@@ -34,16 +34,15 @@ def dump(data, filename):
     except IOError as e:
         print('{}'.format(e))
 
-class KMeans():
+class EM():
     maxIter = None
     clusterCenters = None
     labels = None
     population = None
     route = None
 
-    def __init__(self, maxIter, stations):
+    def __init__(self, maxIter):
         self.maxIter = maxIter
-        self.stations = stations
         self.route = route()
 
     def dist(self, a, b):
@@ -51,17 +50,20 @@ class KMeans():
         return r
 
     def closer(self, a):
-        b = a
-        return b
+        idx = (np.abs(self.table - a)).argmin(axis=0)
+        return self.table[idx[0]]
 
     def geodist(self, a, b):
         r = Geodesic.WGS84.Inverse(a[0], a[1], b[0], b[1])['s12']
         return r
 
+    def index(self, a):
+        a = np.where(self.table == a)[0]
+        a = max(zip(*np.unique(a, return_counts=True)), key=lambda x: x[1])[0]
+        return a
+
     def tab_dist(self, a, b):
-        #a = np.where(self.X == a)
-        #b = np.where(self.X == b)
-        r = self.table[a][b]
+        r = self.dist_table[a][b]
         return r
 
     def stop(self, iter, old, new, lold, lnew):
@@ -70,7 +72,7 @@ class KMeans():
         return np.array_equal(old, new) or np.array_equal(lold, lnew)
 
     def cloop(self, i, j):
-        return (self.dist(self.X[i], self.C[j]), j)
+        return (self.tab_dist(self.X[i], self.index(self.C[j][:2])), j)
 
     def xloop(self, i, _=None):
         # calculate distance between point and all the clusters centers
@@ -84,10 +86,9 @@ class KMeans():
         # set label of point
         self.L[i] = self.C[m][2]
         self.P[m] += 1
-        self.A[m] = np.append(self.A[m], [self.X[i]], axis=0)
+        self.A[m] = np.append(self.A[m], [self.table[i]], axis=0)
 
     def fit(self, X, C):
-        self.route.start()
         # set initial parameters
         iteration = 0
         c_old = None
@@ -95,25 +96,23 @@ class KMeans():
         # get length of lists
         self.c_len = len(C)
         self.x_len = len(X)
+        # get grid size
         bnds = getBounds(X)
         # size = max(self.geodist(leto, rito), self.geodist(ribo, rito))
         size = max(self.geodist(bnds[2:0:-1], bnds[2:5]), self.geodist(bnds[::3], bnds[2:5]))
-        size = ceil(size / 50)
-
-        grid = np.delete(makeGrid([size, size], getBounds(X)), 2, 1)
-        table = np.append(X, grid, axis=0)
+        size = ceil(size / 100)
+        grid = np.delete(makeGrid([size, size], getBounds(X), round_=6), 2, 1)
+        self.table = np.append(X, grid, axis=0)
         print('Now {} points will be clustering to {} clusters using grid {g}x{g}'.format(self.x_len, self.c_len, g=size))
 
         self.L = np.empty([self.x_len])
-        self.C = C
-        self.X = X
         self.P = None
         self.A = None
 
         print('calculating metric! please wait...')
-        self.table = self.route.make_table(table)
+        self.route.start()
+        self.dist_table = self.route.make_table(self.table)
         self.route.stop()
-        np.savetxt('table-no-fix.txt', self.table, fmt='%13.5f')
         print('tabulating metric! please wait...')
         fixed = 0
         with open('false.txt', 'w') as tf:
@@ -126,12 +125,18 @@ class KMeans():
                             yz = self.tab_dist(y, z)
                             xyz = round(xy + yz, 5)
                             if xyz < xz:
-                                tf.write('{}-{}-{}: xy={:.5f}, yz={:.5f}, xz={:.5f}, xyz={:.5f}\n'.format(x, y, z, xy, yz, xz, xyz))
                                 fixed += 1
-                            self.table[x][z] = xyz
-                            self.table[z][x] = self.table[x][z]
-        np.savetxt('table.txt', self.table, fmt='%13.5f')
-        exit()
+                            self.dist_table[x][z] = xyz
+                            self.dist_table[z][x] = self.dist_table[x][z]
+        np.savetxt('log/table.txt', self.dist_table, fmt='%13.5f')
+        print('tabulating complete, fixed distances: {}'.format(fixed))
+
+        # replace all points with their place in table
+        self.X = list(range(len(X)))
+        # finding closest points to cluster centers
+        i = C[:, 2]
+        C = np.array(list(map(lambda x: self.closer(x), C[:, :2])))
+        self.C = np.append(C, np.reshape(i, (i.shape[0], 1)), axis=1)
         # while clustering isn't completed
         while not self.stop(iteration, c_old, self.C, l_old, self.L):
             time_start = time.time()
@@ -171,24 +176,18 @@ class KMeans():
                 # if it contains points
                 if self.P[i] != 0:
                     # calculate center of cluster
-                    k = np.array(np.round(np.mean(self.A[i], axis=0), decimals=5), dtype='object')
+                    print(self.A[i])
+                    k = np.array(np.round(np.mean(self.A[i], axis=0).astype(np.double), decimals=6), dtype='object')
                     mu[i] = np.append(k, i)
                 else:
-                    d = np.round(self.C[i][:2].astype(np.double), decimals=5)
+                    d = np.round(self.C[i][:2].astype(np.double), decimals=6)
                     mu[i] = np.append(d.astype(np.object), i)
                 i += 1
-            if self.stations:
-                print('  locating centers on roadmap')
-                for c in range(self.c_len):
-                    text = '      progress: {} / {}'.format(c + 1, self.c_len)
-                    digits = len(text)
-                    delete = '\r' * digits
-                    print('{0}{1}'.format(delete, text), end='')
-                    new = self.route.locate(mu[c][:2])
-                    mu[c][0], mu[c][1] = new[0], new[1]
             print('  replacing old centers with new')
             # equate current centroids to calculated
-            self.C = mu
+            i = mu[:, 2]
+            mu = np.array(list(map(lambda x: self.closer(x), mu[:, :2])))
+            self.C = np.append(mu, np.reshape(i, (i.shape[0], 1)), axis=1)
             # increment iteration counter
             iteration += 1
             print('  iteration end:')
@@ -206,13 +205,12 @@ class KMeans():
         self.clusterCenters = self.C
         self.labels = self.L
         self.population = self.P
-        self.route.stop()
 
-class KMeansClusteringMachine(ClusteringMachine):
-    def __init__(self, X, init, maxIter=100, stations=False):
+class EMClusteringMachine(ClusteringMachine):
+    def __init__(self, X, init, maxIter=100):
         self.X = X
         self.clusterCenters = init
-        self.clusterInstance = KMeans(maxIter=maxIter, stations=stations)
+        self.clusterInstance = EM(maxIter=maxIter)
 
     def fit(self):
         t_start = time.time()

@@ -39,7 +39,7 @@ class route():
     API = 5
     sleep = 5
 
-    def start(self, loud=False, map_='', dim=1):
+    def start(self, loud=False, map_=''):
         """ Start local OSRM machine.
 
         Needs time to start, contains a sleep statement.
@@ -164,6 +164,11 @@ class route():
             raise OSRMError('OSRM not started!')
 
         dist = None
+        if type(a) != np.array:
+            a = np.array(a)
+        if type(b) != np.array:
+            b = np.array(b)
+
         # if shape of given arrays isn't (0:2)
         if a.shape[0] == 1:
             a = np.array([a[0][0], a[0][1]])
@@ -198,6 +203,9 @@ class route():
 
     def make_table(self, X):
         dim = len(X)
+        percent = 0
+        last = -1
+        from math import floor
 
         if self.osrm:
             self.table = np.zeros([dim, dim])
@@ -205,6 +213,12 @@ class route():
                 for j in range(i + 1, dim):
                     self.table[i][j] = self.route_distance(X[i], X[j])
                     self.table[j][i] = self.table[i][j]
+                    completed = i * dim + j
+                    all = dim * dim
+                    percent = floor(completed / all * 1000) / 10
+                    if percent != last:
+                        last = percent
+                        print('{}% ({} / {})...'.format(percent, completed, all))
         return self.table
 
     def stop(self):

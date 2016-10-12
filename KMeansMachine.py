@@ -1,13 +1,14 @@
 from __future__ import division, print_function
-import geojson as json
+import os
 import time
 import numpy as np
-import os
+import geojson as json
+from math import ceil
 from geographiclib.geodesic import Geodesic
 
 from routelib import route
 from ClusteringMachine import ClusteringMachine
-from InitMachine import getBounds, grid
+from InitMachine import getBounds, grid as makeGrid
 
 from multiprocessing.dummy import Pool as ThreadPool
 THREADS = 4
@@ -44,10 +45,20 @@ class KMeans():
         self.maxIter = maxIter
         self.stations = stations
         self.route = route()
-        self.grid = 1
 
     def dist(self, a, b):
-        #r = self.route.route_distance(a, b)
+        r = self.route.route_distance(a, b)
+        return r
+
+    def closer(self, a):
+        b = a
+        return b
+
+    def geodist(self, a, b):
+        r = Geodesic.WGS84.Inverse(a[0], a[1], b[0], b[1])['s12']
+        return r
+
+    def tab_dist(self, a, b):
         #a = np.where(self.X == a)
         #b = np.where(self.X == b)
         r = self.table[a][b]
@@ -76,6 +87,7 @@ class KMeans():
         self.A[m] = np.append(self.A[m], [self.X[i]], axis=0)
 
     def fit(self, X, C):
+        self.route.start()
         # set initial parameters
         iteration = 0
         c_old = None
@@ -83,34 +95,42 @@ class KMeans():
         # get length of lists
         self.c_len = len(C)
         self.x_len = len(X)
-        print('Now {} points will be clustering to {} clusters'.format(self.x_len, self.c_len))
+        bnds = getBounds(X)
+        # size = max(self.geodist(leto, rito), self.geodist(ribo, rito))
+        size = max(self.geodist(bnds[2:0:-1], bnds[2:5]), self.geodist(bnds[::3], bnds[2:5]))
+        size = ceil(size / 50)
+
+        grid = np.delete(makeGrid([size, size], getBounds(X)), 2, 1)
+        table = np.append(X, grid, axis=0)
+        print('Now {} points will be clustering to {} clusters using grid {g}x{g}'.format(self.x_len, self.c_len, g=size))
 
         self.L = np.empty([self.x_len])
         self.C = C
         self.X = X
         self.P = None
         self.A = None
-        self.sleeping = 0
 
-        self.route.start()
-        self.sleeping += self.route.sleep
-        print('calculating! please wait...')
-        self.table = self.route.make_table(X)
-        np.savetxt('table.txt', self.table, fmt='%10.2f')
+        print('calculating metric! please wait...')
+        self.table = self.route.make_table(table)
         self.route.stop()
+        np.savetxt('table-no-fix.txt', self.table, fmt='%13.5f')
+        print('tabulating metric! please wait...')
+        fixed = 0
         with open('false.txt', 'w') as tf:
             for x in range(len(X)):
                 for z in range(x + 1, len(X)):
                     for y in range(x + 1, len(X)):
                         if y != z:
-                            xy = self.dist(x, y)
-                            xz = self.dist(x, z)
-                            yz = self.dist(y, z)
-                            xyz = round(xy + yz)
+                            xy = self.tab_dist(x, y)
+                            xz = self.tab_dist(x, z)
+                            yz = self.tab_dist(y, z)
+                            xyz = round(xy + yz, 5)
                             if xyz < xz:
-                                tf.write('{}-{}-{}: xy={:.1f}, yz={:.1f}, xz={:.1f}, xyz={:.1f}\n'.format(x, y, z, xy, yz, xz, xyz))
+                                tf.write('{}-{}-{}: xy={:.5f}, yz={:.5f}, xz={:.5f}, xyz={:.5f}\n'.format(x, y, z, xy, yz, xz, xyz))
+                                fixed += 1
                             self.table[x][z] = xyz
                             self.table[z][x] = self.table[x][z]
+        np.savetxt('table.txt', self.table, fmt='%13.5f')
         exit()
         # while clustering isn't completed
         while not self.stop(iteration, c_old, self.C, l_old, self.L):
@@ -199,7 +219,7 @@ class KMeansClusteringMachine(ClusteringMachine):
         # perform clustering
         self.clusterInstance.fit(self.X, self.clusterCenters)
         # calculate time
-        self.fitTime = time.time() - t_start - self.clusterInstance.sleeping
+        self.fitTime = time.time() - t_start
         if self.fitTime > 86400:
             self.fitTime = '{:.4f} days'.format(self.fitTime / 86400)
         elif self.fitTime > 3600:

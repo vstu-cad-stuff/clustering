@@ -31,7 +31,7 @@ def grid(grid, bounds):
                 curr_ln -= delta_ln * (grid[0] - 1)
         else:
             curr_ln += delta_ln
-        centers = np.append(self.centers,
+        centers = np.append(centers,
             [[curr_lt, curr_ln, i + 1]], axis=0)
     return centers
 

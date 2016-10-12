@@ -41,9 +41,13 @@ class EM():
     population = None
     route = None
 
-    def __init__(self, maxIter):
+    def __init__(self, maxIter, table):
         self.maxIter = maxIter
         self.route = route()
+        if table:
+            self.dist_table = np.loadtxt(table)
+        else:
+            self.dist_table = None
 
     def dist(self, a, b):
         r = self.route.route_distance(a, b)
@@ -109,13 +113,13 @@ class EM():
         self.P = None
         self.A = None
 
-        print('calculating metric! please wait...')
-        self.route.start()
-        self.dist_table = self.route.make_table(self.table)
-        self.route.stop()
-        print('tabulating metric! please wait...')
-        fixed = 0
-        with open('false.txt', 'w') as tf:
+        if self.dist_table is None:
+            print('calculating metric! please wait...')
+            self.route.start()
+            self.dist_table = self.route.make_table(self.table)
+            self.route.stop()
+            print('tabulating metric! please wait...')
+            fixed = 0
             for x in range(len(X)):
                 for z in range(x + 1, len(X)):
                     for y in range(x + 1, len(X)):
@@ -128,8 +132,8 @@ class EM():
                                 fixed += 1
                             self.dist_table[x][z] = xyz
                             self.dist_table[z][x] = self.dist_table[x][z]
-        np.savetxt('log/table.txt', self.dist_table, fmt='%13.5f')
-        print('tabulating complete, fixed distances: {}'.format(fixed))
+            np.savetxt('log/table.txt', self.dist_table, fmt='%13.5f')
+            print('tabulating complete, fixed distances: {}'.format(fixed))
 
         # replace all points with their place in table
         self.X = list(range(len(X)))
@@ -176,7 +180,6 @@ class EM():
                 # if it contains points
                 if self.P[i] != 0:
                     # calculate center of cluster
-                    print(self.A[i])
                     k = np.array(np.round(np.mean(self.A[i], axis=0).astype(np.double), decimals=6), dtype='object')
                     mu[i] = np.append(k, i)
                 else:
@@ -207,10 +210,10 @@ class EM():
         self.population = self.P
 
 class EMClusteringMachine(ClusteringMachine):
-    def __init__(self, X, init, maxIter=100):
+    def __init__(self, X, init, maxIter=100, table=None):
         self.X = X
         self.clusterCenters = init
-        self.clusterInstance = EM(maxIter=maxIter)
+        self.clusterInstance = EM(maxIter=maxIter, table=table)
 
     def fit(self):
         t_start = time.time()

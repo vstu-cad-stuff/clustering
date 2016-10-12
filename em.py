@@ -4,14 +4,15 @@ from EMMachine import EMClusteringMachine as EM
 from argparse import ArgumentParser
 
 parser = ArgumentParser(description='EM clustering.')
-parser.add_argument('-n', '--iteration', type=int, help='Iterations count.', default=100)
-parser.add_argument('-c', '--clusters', nargs='+', help='Load clusters from file with name as first argument.\n'
+parser.add_argument('-i', '--iteration', type=int, help='Iterations count.', default=100)
+parser.add_argument('-c', '--clusters', nargs='+', help='Load clusters from file which name is the first argument.\n'
                           'If clusters should be load from specific points\' types, pass them to arguments after filename')
-parser.add_argument('-p', '--points', help='Load points from file with name as first argument.\n'
+parser.add_argument('-p', '--points', nargs='+', help='Load points from file which name is the first argument.\n'
                           'If points shouldn\'t be load from specific points\' types, pass them to arguments after filename',
-                          nargs='+', required=True)
-parser.add_argument('-r', '--random', type=int, help='Number of clusters if "init" is set to "random"')
-parser.add_argument('-g', '--grid', type=int, nargs=2, help='Size of grid if "init" is set to "grid"')
+                          required=True)
+parser.add_argument('-r', '--random', type=int, help='Initialize clusters by uniform distribution of points. Argument is the number of clusters.')
+parser.add_argument('-g', '--grid', type=int, nargs=2, help='Initialize clusters by grid. Arguments are width and height of grid.')
+parser.add_argument('-t', '--table', help='Load metric table from file which name is the argument.')
 
 args = parser.parse_args()
 
@@ -50,7 +51,7 @@ else:
 # initM.exportCentersToTextFile('init.txt')
 
 # create EMClusteringMachine object with specified parameters
-em = EM(X, clusters, maxIter=iterationsCount)
+em = EM(X, clusters, maxIter=iterationsCount, table=args.table)
 
 # perform clustering
 em.fit()

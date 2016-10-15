@@ -34,6 +34,14 @@ def dump(data, filename):
     except IOError as e:
         print('{}'.format(e))
 
+def graham(data):
+    hull = []
+    return hull
+
+def is_inside(point, hull):
+    inside = False
+    return inside
+
 class EM():
     maxIter = None
     clusterCenters = None

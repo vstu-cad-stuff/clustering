@@ -34,13 +34,38 @@ def dump(data, filename):
     except IOError as e:
         print('{}'.format(e))
 
-def graham(data):
-    hull = []
-    return hull
+def jarvis(x):
+    def rotate(a, b, c):
+        return (b[1] - a[1]) * (c[0] - b[0]) - (b[0] - a[0]) * (c[1] - b[1])
 
-def is_inside(point, hull):
-    inside = False
-    return inside
+    n = len(x)
+    p = list(range(n))
+    for i in range(1,n):
+        if x[p[i]][1] < x[p[0]][1]:
+            p[i], p[0] = p[0], p[i]
+    h = [p[0]]
+    del p[0]
+    p.append(h[0])
+    while True:
+        right = 0
+        for i in range(1, len(p)):
+            if rotate(x[h[-1]], x[p[right]], x[p[i]]) < 0:
+                right = i
+        if p[right] == h[0]:
+            break
+        else:
+            h.append(p[right])
+            del p[right]
+    return x[h]
+
+def inside(point, hull):
+    result = False
+    j = hull[-1]
+    for k in hull:
+        if ((k[0] > point[0]) != (j[0] > point[0])) and (point[1] < (j[1] - k[1]) * (point[0] - k[0]) / (j[0] - k[0]) + k[1]):
+            result = not result
+        j = k
+    return result
 
 class EM():
     maxIter = None
@@ -112,8 +137,15 @@ class EM():
         bnds = getBounds(X)
         # size = max(self.geodist(leto, rito), self.geodist(ribo, rito))
         size = max(self.geodist(bnds[2:0:-1], bnds[2:5]), self.geodist(bnds[::3], bnds[2:5]))
-        size = ceil(size / 100)
-        grid = np.delete(makeGrid([size, size], getBounds(X), round_=6), 2, 1)
+        size = ceil(size / 50)
+        grid = np.delete(makeGrid([size, size], getBounds(X), round_=6), 2, axis=1)
+        outside = []
+        for i, j in enumerate(grid):
+            if not inside(j, jarvis(X)):
+                outside.append(i)
+        grid = np.delete(grid, outside, axis=0)
+        grid = np.vstack({tuple(row) for row in grid})
+
         self.table = np.append(X, grid, axis=0)
         print('Now {} points will be clustering to {} clusters using grid {g}x{g}'.format(self.x_len, self.c_len, g=size))
 

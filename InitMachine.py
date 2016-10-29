@@ -20,8 +20,12 @@ def grid(grid, bounds, round_=None):
 
     centers = np.empty([0, 3], dtype='object')
 
-    centers = np.append(centers,
-        [[curr_lt, curr_ln, 0]], axis=0)
+    if round_ is None:
+        centers = np.append(centers,
+            [[curr_lt, curr_ln, 0]], axis=0)
+    else:
+        centers = np.append(centers,
+            [[round(curr_lt, round_), round(curr_ln, round_), 0]], axis=0)
     for i in range(grid[0] * grid[1]):
         if curr_ln + delta_ln > bounds[3]:
             if curr_lt + delta_lt > bounds[2]:

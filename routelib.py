@@ -204,6 +204,7 @@ class route():
     def make_table(self, X):
         dim = len(X)
         percent = 0
+        digits = 0
         last = -1
         from math import floor
 
@@ -216,9 +217,13 @@ class route():
                     completed = i * dim + j
                     all = dim * dim
                     percent = floor(completed / all * 1000) / 10
+
+                    text = '  {}% ({} / {})'.format(percent, completed, all)
+                    delete = '\r' * digits
                     if percent != last:
                         last = percent
-                        print('{}% ({} / {})...'.format(percent, completed, all))
+                        print('{0}{1}'.format(delete, text), end='')
+                        digits = len(text)
         return self.table
 
     def stop(self):

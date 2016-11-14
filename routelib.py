@@ -224,6 +224,10 @@ class route():
                         last = percent
                         print('{0}{1}'.format(delete, text), end='')
                         digits = len(text)
+
+            text = '  100% ({} / {})'.format(percent, all, all)
+            delete = '\r' * digits
+            print('{0}{1}'.format(delete, text), end='')
         return self.table
 
     def stop(self):

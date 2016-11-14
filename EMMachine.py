@@ -139,19 +139,22 @@ class EM():
         size = max(self.geodist(bnds[2:0:-1], bnds[2:5]), self.geodist(bnds[::3], bnds[2:5]))
         size = ceil(size / 50)
         grid = np.delete(makeGrid([size, size], getBounds(X), round_=6), 2, axis=1)
+        size_before = self.x_len + len(grid)
+        if locate:
+            print('Locating metric table...')
+            self.route.start()
+            grid = np.apply_along_axis(lambda x: self.route.locate(x).round(6), 1, grid)
+            self.route.stop()
         outside = []
         for i, j in enumerate(grid):
             if not inside(j, jarvis(X)):
                 outside.append(i)
         grid = np.delete(grid, outside, axis=0)
-        grid = np.vstack({tuple(row) for row in grid})
-        if locate:
-            self.route.start()
-            grid = np.apply_along_axis(self.route.locate, 1, grid)
-            self.route.stop()
+        grid = np.vstack({tuple(row) for row in grid}) # this deletes dublicates
 
         self.table = np.append(X, grid, axis=0)
         print('Now {} points will be clustering to {} clusters using grid {g}x{g}'.format(self.x_len, self.c_len, g=size))
+        print('  (size of metric table was decreased from {} elements to {})'.format(size_before, len(self.table)))
 
         self.L = np.empty([self.x_len])
         self.P = None

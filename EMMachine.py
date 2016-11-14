@@ -160,6 +160,10 @@ class EM():
         self.P = None
         self.A = None
 
+        path = 'log'
+        if not (os.path.exists(path)):
+            os.makedirs(path)
+
         if self.dist_table is None:
             print('calculating metric! please wait...')
             self.route.start()
@@ -179,7 +183,7 @@ class EM():
                                 fixed += 1
                             self.dist_table[x][z] = xyz
                             self.dist_table[z][x] = self.dist_table[x][z]
-            np.savetxt('log/table.txt', self.dist_table, fmt='%13.5f')
+            np.savetxt('{}/table.txt'.format(path), self.dist_table, fmt='%13.5f')
             print('tabulating complete, fixed distances: {}'.format(fixed))
 
         # replace all points with their place in table
@@ -205,9 +209,6 @@ class EM():
             # equate the previous and current centers of clusters
             c_old = self.C
 
-            path = 'log'
-            if not (os.path.exists(path)):
-                os.makedirs(path)
             cc = self.C
             cc = list(map(lambda x, y: (np.append(x, y)).tolist(), cc, self.P))
             filename = '{}/r_centers_{}.js'.format(path, iteration + 1)

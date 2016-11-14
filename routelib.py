@@ -131,7 +131,7 @@ class route():
                 # throw error
                 raise OSRMError('Error locating: {}'.format(l_data['status_message']))
             else:
-                return l_data['mapped_coordinate']
+                return np.array(l_data['mapped_coordinate'])
         elif self.API == 5:
             if l_data['code'] != 'Ok':
                 # stop osrm machine
@@ -139,7 +139,7 @@ class route():
                 # throw error
                 raise OSRMError('Error locating: {}'.format(l_data['message']))
             else:
-                return l_data['waypoints'][0]['location'][::-1]
+                return np.array(l_data['waypoints'][0]['location'][::-1])
 
     def route_distance(self, a, b):
         """ Get distance between points.

@@ -125,7 +125,7 @@ class EM():
         self.P[m] += 1
         self.A[m] = np.append(self.A[m], [self.table[i]], axis=0)
 
-    def fit(self, X, C):
+    def fit(self, X, C, locate):
         # set initial parameters
         iteration = 0
         c_old = None
@@ -145,6 +145,10 @@ class EM():
                 outside.append(i)
         grid = np.delete(grid, outside, axis=0)
         grid = np.vstack({tuple(row) for row in grid})
+        if locate:
+            self.route.start()
+            grid = np.apply_along_axis(self.route.locate, 1, grid)
+            self.route.stop()
 
         self.table = np.append(X, grid, axis=0)
         print('Now {} points will be clustering to {} clusters using grid {g}x{g}'.format(self.x_len, self.c_len, g=size))
@@ -255,10 +259,10 @@ class EMClusteringMachine(ClusteringMachine):
         self.clusterCenters = init
         self.clusterInstance = EM(maxIter=maxIter, table=table)
 
-    def fit(self):
+    def fit(self, locate=False):
         t_start = time.time()
         # perform clustering
-        self.clusterInstance.fit(self.X, self.clusterCenters)
+        self.clusterInstance.fit(self.X, self.clusterCenters, locate=locate)
         # calculate time
         self.fitTime = time.time() - t_start
         if self.fitTime > 86400:

@@ -13,6 +13,7 @@ parser.add_argument('-p', '--points', nargs='+', help='Load points from file whi
 parser.add_argument('-r', '--random', type=int, help='Initialize clusters by uniform distribution of points. Argument is the number of clusters.')
 parser.add_argument('-g', '--grid', type=int, nargs=2, help='Initialize clusters by grid. Arguments are width and height of grid.')
 parser.add_argument('-t', '--table', help='Load metric table from file which name is the argument.')
+parser.add_argument('-l', '--locate', help='Locate metric table elements to roads.', action="store_true")
 
 args = parser.parse_args()
 
@@ -47,14 +48,12 @@ elif args.clusters:
     clusters = InitMachine.file(filename=filename, params=clusterParams)
 else:
     print('Unrecognized init type: {}'.format(init))
-# export init centers to 'init.txt'
-# initM.exportCentersToTextFile('init.txt')
 
 # create EMClusteringMachine object with specified parameters
 em = EM(X, clusters, maxIter=iterationsCount, table=args.table)
 
 # perform clustering
-em.fit()
+em.fit(locate=args.locate)
 # print info
 print('Fit time: {}, clusters: {}'.format(em.fitTime, em.numCluster))
 

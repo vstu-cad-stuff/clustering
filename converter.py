@@ -60,7 +60,7 @@ def action(param_list):
                     lon = k['lon']
                     pop = k['pop']
                     centers.append([lat, lon, id, pop])
-            else:        
+            else:
                 centers.append(center)
     json.dump(centers, File)
     File.close()
@@ -80,10 +80,10 @@ def action(param_list):
                 lon = k['lon']
                 p.append([lat, lon, id])
             points = p
-        mx = int(max(map(lambda k: k[2], points))) + 1
+        mx = int(max(map(lambda k: k[-1], points))) + 1
         ps = [np.empty([0, 3]) for each in range(0, mx)]
         for j in points:
-            b = int(j[2])
+            b = int(j[-1])
             ps[b] = np.append(ps[b], [j], axis=0)
         this_hulls = []
         for j in ps:
@@ -96,6 +96,7 @@ def action(param_list):
                 pass
         hulls.append(this_hulls)
     json.dump(hulls, File)
+    print('  saved to {}'.format(filepoi))
     File.close()
 
 def actions(lists):

@@ -213,7 +213,7 @@ class EM():
             cc = list(map(lambda x, y: (np.append(x, y)).tolist(), cc, self.P))
             filename = '{}/r_centers_{}.js'.format(path, iteration + 1)
             dump(cc, filename)
-            xc = self.X
+            xc = X
             xc = list(map(lambda x, y: (np.append(x, y)).tolist(), xc, self.L))
             filename = '{}/r_points_{}.js'.format(path, iteration + 1)
             dump(xc, filename)

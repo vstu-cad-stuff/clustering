@@ -2,16 +2,7 @@ import time
 import json
 import subprocess
 import numpy as np
-
-from sys import version_info as vinfo
-PYTHON2 = True
-if vinfo[0] > 2:
-    PYTHON2 = False
-
-if PYTHON2:
-    from urllib import urlopen
-else:
-    from urllib.request import urlopen
+import requests as req
 
 class OSRMError(Exception):
     def __init__(self, value):
@@ -57,14 +48,10 @@ class route():
             self.osrm = osrm
         time.sleep(self.sleep)
         a = [44.27, 48.41]
-        url = 'http://localhost:5000/nearest/v1/car/{},{}'.format(*a[::-1])
+        url = 'http://127.0.0.1:5000/nearest/v1/car/{},{}'.format(*a[::-1])
         try:
-            response = urlopen(url)
-            if not PYTHON2:
-                response = response.readall().decode('utf-8')
-                data = json.loads(response)
-            else:
-                data = json.load(response)
+            response = req.get(url)
+            data = response.json()
             try:
                 code = data['code']
                 self.API = 5
@@ -82,20 +69,16 @@ class route():
 
         # send request to find route between points
         if self.API == 4:
-            url = "http://localhost:5000/viaroute?loc={},{}&loc={},{}" \
+            url = "http://127.0.0.1:5000/viaroute?loc={},{}&loc={},{}" \
                 "&geometry=false&alt=false".format(*np.append(a, b))
         elif self.API == 5:
-            url = 'http://localhost:5000/route/v1/car/{},{};{},{}?overview=false' \
+            url = 'http://127.0.0.1:5000/route/v1/car/{},{};{},{}?overview=false' \
                 '&alternatives=false&steps=false'.format(*np.append(a[::-1], b[::-1]))
 
         # get response
-        response = urlopen(url)
+        response = req.get(url)
         # parse json
-        if not PYTHON2:
-            response = response.readall().decode('utf-8')
-            data = json.loads(response)
-        else:
-            data = json.load(response)
+        data = response.json()
 
         # if route isn't found
         if self.API == 4:
@@ -114,32 +97,28 @@ class route():
             raise OSRMError('OSRM not started!')
 
         if self.API == 4:
-            loc = 'http://localhost:5000/locate?loc={},{}'.format(*a)
+            loc = 'http://127.0.0.1:5000/locate?loc={},{}'.format(*a)
         elif self.API == 5:
-            loc = 'http://localhost:5000/nearest/v1/car/{},{}'.format(*a[::-1])
-        l_resp = urlopen(loc)
-        if not PYTHON2:
-            l_resp = l_resp.readall().decode('utf-8')
-            l_data = json.loads(l_resp)
-        else:
-            l_data = json.load(l_resp)
+            loc = 'http://127.0.0.1:5000/nearest/v1/car/{},{}'.format(*a[::-1])
+        resp = req.get(loc)
+        data = resp.json()
         # if can't locate
         if self.API == 4:
-            if l_data['status'] != 0:
+            if data['status'] != 0:
                 # stop osrm machine
                 self.stop()
                 # throw error
-                raise OSRMError('Error locating: {}'.format(l_data['status_message']))
+                raise OSRMError('Error locating: {}'.format(data['status_message']))
             else:
-                return np.array(l_data['mapped_coordinate'])
+                return np.array(data['mapped_coordinate'])
         elif self.API == 5:
-            if l_data['code'] != 'Ok':
+            if data['code'] != 'Ok':
                 # stop osrm machine
                 self.stop()
                 # throw error
-                raise OSRMError('Error locating: {}'.format(l_data['message']))
+                raise OSRMError('Error locating: {}'.format(data['message']))
             else:
-                return np.array(l_data['waypoints'][0]['location'][::-1])
+                return np.array(data['waypoints'][0]['location'][::-1])
 
     def route_distance(self, a, b):
         """ Get distance between points.

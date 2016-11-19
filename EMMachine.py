@@ -137,7 +137,7 @@ class EM():
         bnds = getBounds(X)
         # size = max(self.geodist(leto, rito), self.geodist(ribo, rito))
         size = max(self.geodist(bnds[2:0:-1], bnds[2:5]), self.geodist(bnds[::3], bnds[2:5]))
-        size = ceil(size / 50)
+        size = int(ceil(size / 50))
         grid = np.delete(makeGrid([size, size], getBounds(X), round_=6), 2, axis=1)
         size_before = self.x_len + len(grid)
         if locate:

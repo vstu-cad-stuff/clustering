@@ -96,7 +96,7 @@ def action(param_list):
                 pass
         hulls.append(this_hulls)
     json.dump(hulls, File)
-    print('  saved to {}'.format(filepoi))
+    print('  > saved to {}, {}'.format(filecen, filepoi))
     File.close()
 
 def actions(lists):
@@ -125,9 +125,10 @@ if args.many:
         metr = metrics[i]
         acts.append({'last': last, 'log': fold, 'metric': metr})
 
-    actions(acts)
     if len(folders) > length:
-        print('[warn] Number of args was not n*3')
+        print('[warn] Number of args is not n*3')
+        print('       Args order: folder1 metric1 last1 folder2 metric2 ...')
+    actions(acts)
 else:
     last = args.last
     metr = args.metric

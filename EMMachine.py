@@ -134,27 +134,54 @@ class EM():
         self.c_len = len(C)
         self.x_len = len(X)
         # get grid size
+        print('Searching for bounds of points set...')
         bnds = getBounds(X)
         # size = max(self.geodist(leto, rito), self.geodist(ribo, rito))
         size = max(self.geodist(bnds[2:0:-1], bnds[2:5]), self.geodist(bnds[::3], bnds[2:5]))
         size = int(ceil(size / 50))
-        grid = np.delete(makeGrid([size, size], getBounds(X), round_=6), 2, axis=1)
-        size_before = self.x_len + len(grid)
-        if locate:
+        print('  Done. Size of grid: {s}x{s}'.format(s=size))
+        print('Making grid...')
+        grid = np.delete(makeGrid([size, size], getBounds(X), round_=5), 2, axis=1)
+        print('  Done. Number of elements: {}'.format(len(grid)))
+        if locate == 'before':
             print('Locating metric table...')
+            # maxima = len(grid)
             self.route.start()
-            grid = np.apply_along_axis(lambda x: self.route.locate(x).round(6), 1, grid)
+            # def locate(i, x):
+            #     text = '  {} / {}'.format(i, maxima)
+            #     delete = '\r' * digits
+            #     print('{0}{1}'.format(delete, text), end='')
+            #     digits = len(text)
+            #     return self.route.locate(x).round(5)
+            grid = np.apply_along_axis(lambda x: self.route.locate(x).round(5), 1, grid)
             self.route.stop()
+            print('  Done.')
+        print('Finding unnecessary elements...')
         outside = []
         for i, j in enumerate(grid):
             if not inside(j, jarvis(X)):
                 outside.append(i)
         grid = np.delete(grid, outside, axis=0)
+        print('  Done. Number of elements was reduced to {}'.format(len(grid)))
+        if locate == 'after':
+            print('Locating metric table...')
+            # maxima = len(grid)
+            self.route.start()
+            # def locate(i, x):
+            #     text = '  {} / {}'.format(i, maxima)
+            #     delete = '\r' * digits
+            #     print('{0}{1}'.format(delete, text), end='')
+            #     digits = len(text)
+            #     return self.route.locate(x).round(5)
+            grid = np.apply_along_axis(lambda x: self.route.locate(x).round(5), 1, grid)
+            self.route.stop()
+            print('  Done.')
+        print('Removing duplicates...')
         grid = np.vstack({tuple(row) for row in grid}) # this deletes dublicates
+        print('  Done. Final number of elements: {}'.format(len(grid)))
 
         self.table = np.append(X, grid, axis=0)
-        print('Now {} points will be clustering to {} clusters using grid {g}x{g}'.format(self.x_len, self.c_len, g=size))
-        print('  (size of metric table was decreased from {} elements to {})'.format(size_before, len(self.table)))
+        print('Now {} points will be clustering to {} clusters using additional {} elements'.format(self.x_len, self.c_len, len(grid)))
 
         self.L = np.empty([self.x_len])
         self.P = None

@@ -11,6 +11,17 @@ class OSRMError(Exception):
     def __str__(self):
         return repr(self.value)
 
+def request(url):
+    errors = 0
+    while errors < 20:
+        try:
+            response = req.get(url)
+            return response
+        except:
+            time.sleep(0.005)
+            errors += 1
+    raise OSRMError('Can\'t get response for {}'.format(url))
+
 class route():
     """ A class for getting distance between points by finding a route.
 
@@ -77,7 +88,7 @@ class route():
                 '&alternatives=false&steps=false'.format(*np.append(a[::-1], b[::-1]))
 
         # get response
-        response = req.get(url)
+        response = request(url)
         # parse json
         data = response.json()
 
@@ -98,11 +109,11 @@ class route():
             raise OSRMError('OSRM not started!')
 
         if self.API == 4:
-            loc = 'http://127.0.0.1:5000/locate?loc={},{}'.format(*a)
+            url = 'http://127.0.0.1:5000/locate?loc={},{}'.format(*a)
         elif self.API == 5:
-            loc = 'http://127.0.0.1:5000/nearest/v1/car/{},{}'.format(*a[::-1])
-        resp = req.get(loc)
-        data = resp.json()
+            url = 'http://127.0.0.1:5000/nearest/v1/car/{},{}'.format(*a[::-1])
+        response = request(url)
+        data = response.json()
         # if can't locate
         if self.API == 4:
             if data['status'] != 0:

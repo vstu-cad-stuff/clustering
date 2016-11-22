@@ -198,7 +198,7 @@ class EM():
             self.route.stop()
             print('tabulating metric! please wait...')
             fixed = 0
-            for x in range(len(X)):
+            for x in range(len(X) - 1):
                 for z in range(x + 1, len(X)):
                     for y in range(x + 1, len(X)):
                         if y != z:

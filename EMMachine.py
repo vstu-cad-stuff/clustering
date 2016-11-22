@@ -74,13 +74,17 @@ class EM():
     population = None
     route = None
 
-    def __init__(self, maxIter, table):
+    def __init__(self, maxIter, distances, table):
         self.maxIter = maxIter
         self.route = route()
-        if table:
-            self.dist_table = np.loadtxt(table)
+        if distances:
+            self.dist_table = np.loadtxt(distances)
         else:
             self.dist_table = None
+        if table:
+            self.table = np.loadtxt(table)
+        else:
+            self.table = None
 
     def dist(self, a, b):
         r = self.route.route_distance(a, b)
@@ -125,7 +129,7 @@ class EM():
         self.P[m] += 1
         self.A[m] = np.append(self.A[m], [self.table[i]], axis=0)
 
-    def fit(self, X, C, locate):
+    def fit(self, X, C, locate, path):
         # set initial parameters
         iteration = 0
         c_old = None
@@ -133,70 +137,60 @@ class EM():
         # get length of lists
         self.c_len = len(C)
         self.x_len = len(X)
-        # get grid size
-        print('Searching for bounds of points set...')
-        bnds = getBounds(X)
-        # size = max(self.geodist(leto, rito), self.geodist(ribo, rito))
-        size = max(self.geodist(bnds[2:0:-1], bnds[2:5]), self.geodist(bnds[::3], bnds[2:5]))
-        size = int(ceil(size / 50))
-        print('  Done. Size of grid: {s}x{s}'.format(s=size))
-        print('Making grid...')
-        grid = np.delete(makeGrid([size, size], getBounds(X), round_=5), 2, axis=1)
-        print('  Done. Number of elements: {}'.format(len(grid)))
-        if locate == 'before':
-            print('Locating metric table...')
-            # maxima = len(grid)
-            self.route.start()
-            # def locate(i, x):
-            #     text = '  {} / {}'.format(i, maxima)
-            #     delete = '\r' * digits
-            #     print('{0}{1}'.format(delete, text), end='')
-            #     digits = len(text)
-            #     return self.route.locate(x).round(5)
-            grid = np.apply_along_axis(lambda x: self.route.locate(x).round(5), 1, grid)
-            self.route.stop()
-            print('  Done.')
-        print('Finding unnecessary elements...')
-        outside = []
-        for i, j in enumerate(grid):
-            if not inside(j, jarvis(X)):
-                outside.append(i)
-        grid = np.delete(grid, outside, axis=0)
-        print('  Done. Number of elements was reduced to {}'.format(len(grid)))
-        if locate == 'after':
-            print('Locating metric table...')
-            # maxima = len(grid)
-            self.route.start()
-            # def locate(i, x):
-            #     text = '  {} / {}'.format(i, maxima)
-            #     delete = '\r' * digits
-            #     print('{0}{1}'.format(delete, text), end='')
-            #     digits = len(text)
-            #     return self.route.locate(x).round(5)
-            grid = np.apply_along_axis(lambda x: self.route.locate(x).round(5), 1, grid)
-            self.route.stop()
-            print('  Done.')
-        print('Removing duplicates...')
-        grid = np.vstack({tuple(row) for row in grid}) # this deletes dublicates
-        print('  Done. Final number of elements: {}'.format(len(grid)))
 
-        self.table = np.append(X, grid, axis=0)
-        print('Now {} points will be clustering to {} clusters using additional {} elements'.format(self.x_len, self.c_len, len(grid)))
+        if not (os.path.exists(path)):
+            os.makedirs(path)
+
+        if self.table is None:
+            # get grid size
+            print('Searching for bounds of points set...')
+            bnds = getBounds(X)
+            # size = max(self.geodist(leto, rito), self.geodist(ribo, rito))
+            size = max(self.geodist(bnds[2:0:-1], bnds[2:5]), self.geodist(bnds[::3], bnds[2:5]))
+            size = int(ceil(size / 50))
+            print('  Done. Size of grid: {s}x{s}'.format(s=size))
+            print('Making grid...')
+            grid = np.delete(makeGrid([size, size], getBounds(X), round_=5), 2, axis=1)
+            print('  Done. Number of elements: {}'.format(len(grid)))
+            if locate == 'before':
+                print('Locating metric table...')
+                self.route.start()
+                grid = np.apply_along_axis(lambda x: self.route.locate(x).round(5), 1, grid)
+                self.route.stop()
+                print('  Done.')
+            print('Finding unnecessary elements...')
+            outside = []
+            for i, j in enumerate(grid):
+                if not inside(j, jarvis(X)):
+                    outside.append(i)
+            grid = np.delete(grid, outside, axis=0)
+            print('  Done. Number of elements was reduced to {}'.format(len(grid)))
+            if locate == 'after':
+                print('Locating metric table...')
+                self.route.start()
+                grid = np.apply_along_axis(lambda x: self.route.locate(x).round(5), 1, grid)
+                self.route.stop()
+                print('  Done.')
+            print('Removing duplicates...')
+            grid = np.vstack({tuple(row) for row in grid}) # this deletes dublicates
+            print('  Done. Final number of elements: {}'.format(len(grid)))
+            self.table = np.append(X, grid, axis=0)
+            np.savetxt('{}/table.txt'.format(path), self.table)
+            print('Now {} points will be clustering to {} clusters using additional {} elements'.format(self.x_len, self.c_len, len(grid)))
+        else:
+            print('Now {} points will be clustering to {} clusters'.format(self.x_len, self.c_len))
 
         self.L = np.empty([self.x_len])
         self.P = None
         self.A = None
 
-        path = 'log'
-        if not (os.path.exists(path)):
-            os.makedirs(path)
-
         if self.dist_table is None:
-            print('calculating metric! please wait...')
+            print('Calculating metric...')
             self.route.start()
             self.dist_table = self.route.make_table(self.table)
             self.route.stop()
-            print('tabulating metric! please wait...')
+            print('  Done.')
+            print('Tabulating metric...')
             fixed = 0
             for x in range(len(X) - 1):
                 for z in range(x + 1, len(X)):
@@ -208,10 +202,10 @@ class EM():
                             xyz = round(xy + yz, 5)
                             if xyz < xz:
                                 fixed += 1
-                            self.dist_table[x][z] = xyz
-                            self.dist_table[z][x] = self.dist_table[x][z]
-            np.savetxt('{}/table.txt'.format(path), self.dist_table, fmt='%13.5f')
-            print('tabulating complete, fixed distances: {}'.format(fixed))
+                                self.dist_table[x][z] = xyz
+                                self.dist_table[z][x] = self.dist_table[x][z]
+            np.savetxt('{}/distances.txt'.format(path), self.dist_table, fmt='%13.5f')
+            print('  Done. Fixed distances: {}'.format(fixed))
 
         # replace all points with their place in table
         self.X = list(range(len(X)))
@@ -225,12 +219,12 @@ class EM():
             # reset population in clusters
             self.P = np.zeros([self.c_len])
             # show iteration number
-            print('Iteration {}'.format(iteration + 1))
+            print('Iteration {}:'.format(iteration + 1))
             # create empty python array
             # each item will contain all the points belongs to specific cluster
             self.A = [np.empty([0, 2]) for i in range(self.c_len)]
             # for each point
-            print('  assigning points')
+            print('  assigning points...')
             l_old = np.array(self.L)
             res = asyncWorker(range(self.x_len), self.xloop)
             # equate the previous and current centers of clusters
@@ -248,7 +242,7 @@ class EM():
             # array for calculated centers of clusters
             mu = np.empty([self.c_len, 3], dtype='object')
 
-            print('\n  calculating new centers')
+            print('  calculating new centers...')
             # for each cluster
             i = 0
             while i < self.c_len:
@@ -261,14 +255,13 @@ class EM():
                     d = np.round(self.C[i][:2].astype(np.double), decimals=6)
                     mu[i] = np.append(d.astype(np.object), i)
                 i += 1
-            print('  replacing old centers with new')
+            print('  replacing old centers with new...')
             # equate current centroids to calculated
             i = mu[:, 2]
             mu = np.array(list(map(lambda x: self.closer(x), mu[:, :2])))
             self.C = np.append(mu, np.reshape(i, (i.shape[0], 1)), axis=1)
             # increment iteration counter
             iteration += 1
-            print('  iteration end:')
             iter_time = time.time() - time_start
             if iter_time > 86400:
                 iter_time = '{:.4f} days'.format(iter_time / 86400)
@@ -278,22 +271,23 @@ class EM():
                 iter_time = '{:.4f} minutes'.format(iter_time / 60)
             else:
                 iter_time = '{:.4f} seconds'.format(iter_time)
-            print(' ' * 17 + '{}'.format(iter_time))
+            print('  iteration ended in {}\n'.format(iter_time))
         # record results
         self.clusterCenters = self.C
         self.labels = self.L
         self.population = self.P
 
 class EMClusteringMachine(ClusteringMachine):
-    def __init__(self, X, init, maxIter=100, table=None):
+    def __init__(self, X, clusters, maxIter=100, distances=None, table=None):
         self.X = X
-        self.clusterCenters = init
-        self.clusterInstance = EM(maxIter=maxIter, table=table)
+        self.clusterCenters = clusters
+        self.clusterInstance = EM(maxIter=maxIter, distances=distances, table=table)
 
     def fit(self, locate=False):
         t_start = time.time()
+        self.path = str(t_start).replace('.', '_')
         # perform clustering
-        self.clusterInstance.fit(self.X, self.clusterCenters, locate=locate)
+        self.clusterInstance.fit(self.X, self.clusterCenters, locate=locate, path=self.path)
         # calculate time
         self.fitTime = time.time() - t_start
         if self.fitTime > 86400:

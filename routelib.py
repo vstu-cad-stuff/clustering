@@ -216,7 +216,7 @@ class route():
                         print('{0}{1}'.format(delete, text), end='')
                         digits = len(text)
 
-            text = '  100% ({} / {})'.format(percent, all, all)
+            text = '  100% ({a} / {a})'.format(a=all)
             delete = '\r' * digits
             print('{0}{1}'.format(delete, text), end='')
         return self.table

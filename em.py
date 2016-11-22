@@ -10,9 +10,10 @@ parser.add_argument('-c', '--clusters', nargs='+', help='Load clusters from file
 parser.add_argument('-p', '--points', nargs='+', help='Load points from file which name is the first argument.\n'
                           'If points shouldn\'t be load from specific points\' types, pass them to arguments after filename',
                           required=True)
+parser.add_argument('-t', '--table', help='Load metric table from file which name is the argument.')
 parser.add_argument('-r', '--random', type=int, help='Initialize clusters by uniform distribution of points. Argument is the number of clusters.')
 parser.add_argument('-g', '--grid', type=int, nargs=2, help='Initialize clusters by grid. Arguments are width and height of grid.')
-parser.add_argument('-t', '--table', help='Load metric table from file which name is the argument.')
+parser.add_argument('-d', '--distances', help='Load metric distances table from file which name is the argument.')
 parser.add_argument('-l', '--locate', help='Locate metric table elements to roads _before_ finding unnecessary elements.', action="store_true")
 
 args = parser.parse_args()
@@ -50,14 +51,14 @@ else:
     print('Unrecognized init type: {}'.format(init))
 
 # create EMClusteringMachine object with specified parameters
-em = EM(X, clusters, maxIter=iterationsCount, table=args.table)
+em = EM(X, clusters, maxIter=iterationsCount, distances=args.distances, table=args.table)
 
 # perform clustering
 em.fit(locate='before' if args.locate else 'after')
 # print info
-print('Fit time: {}, clusters: {}'.format(em.fitTime, em.numCluster))
+print('Fit time: {}, clusters: {}. Saved in {}'.format(em.fitTime, em.numCluster, em.path))
 
 # export centers to 'centers.js'
-em.exportCentersToTextFile('{}_cls.js'.format('log'))
+em.exportCentersToTextFile('{}/cls.js'.format(em.path))
 # export points to 'points.js'
-em.exportPointsToTextFile('{}_pts.js'.format('log'))
+em.exportPointsToTextFile('{}/pts.js'.format(em.path))

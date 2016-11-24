@@ -11,6 +11,23 @@ class OSRMError(Exception):
     def __str__(self):
         return repr(self.value)
 
+class Point():
+    def __init__(self, lat, lon):
+        self.lat = lat
+        self.lon = lon
+
+    def __str__(self):
+        return '{},{}'.format(self.lat, self.lon)
+
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
+
+    def reverso(self):
+        return '{},{}'.format(self.lon, self.lat)
+
+    def round(self, decimals):
+        return Point(round(self.lat, decimals), round(self.lon, decimals))
+
 def request(url):
     errors = 0
     while errors < 20:
@@ -81,11 +98,11 @@ class route():
 
         # send request to find route between points
         if self.API == 4:
-            url = "http://127.0.0.1:5000/viaroute?loc={},{}&loc={},{}" \
-                "&geometry=false&alt=false".format(*np.append(a, b))
+            url = "http://127.0.0.1:5000/viaroute?loc={}&loc={}" \
+                "&geometry=false&alt=false".format(a, b)
         elif self.API == 5:
-            url = 'http://127.0.0.1:5000/route/v1/car/{},{};{},{}?overview=false' \
-                '&alternatives=false&steps=false'.format(*np.append(a[::-1], b[::-1]))
+            url = 'http://127.0.0.1:5000/route/v1/car/{};{}?overview=false' \
+                '&alternatives=false&steps=false'.format(a.reverso, b.reverso)
 
         # get response
         response = request(url)
@@ -102,6 +119,8 @@ class route():
             if data['code'] != 'Ok':
                 raise OSRMError('Error routing: {}'.format(data['message']))
             else:
+                print(data['routes'][0]['distance'])
+                exit()
                 return data['routes'][0]['distance']
 
     def locate(self, a):
@@ -109,9 +128,9 @@ class route():
             raise OSRMError('OSRM not started!')
 
         if self.API == 4:
-            url = 'http://127.0.0.1:5000/locate?loc={},{}'.format(*a)
+            url = 'http://127.0.0.1:5000/locate?loc={}'.format(a)
         elif self.API == 5:
-            url = 'http://127.0.0.1:5000/nearest/v1/car/{},{}'.format(*a[::-1])
+            url = 'http://127.0.0.1:5000/nearest/v1/car/{}'.format(a.reverso)
         response = request(url)
         data = response.json()
         # if can't locate
@@ -155,23 +174,8 @@ class route():
             raise OSRMError('OSRM not started!')
 
         dist = None
-        if type(a) != np.array:
-            a = np.array(a)
-        if type(b) != np.array:
-            b = np.array(b)
 
-        # if shape of given arrays isn't (0:2)
-        if a.shape[0] == 1:
-            a = np.array([a[0][0], a[0][1]])
-        if b.shape[0] == 1:
-            b = np.array([b[0][0], b[0][1]])
-
-        a, b = a[:2], b[:2]
-
-        c = list(map(lambda i: np.round(i, decimals=5), a))
-        d = list(map(lambda i: np.round(i, decimals=5), b))
-
-        if np.array_equal(c, d):
+        if a == b:
             # if points are the same return zero
             dist = 0.0
         else:

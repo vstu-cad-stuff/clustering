@@ -1,6 +1,6 @@
 import geojson as json
 import numpy as np
-import matplotlib.pyplot as plt
+from routelib import Point
 
 class DataCollector():
     """ Collects points from various sources.
@@ -26,12 +26,12 @@ class DataCollector():
         try:
             with open(filename) as file_:
                 # create an empty array for points
-                data = np.empty((0, 2), float)
+                data = np.empty(0, object)
                 arr = json.loads(file_.readlines()[0])
                 for i in arr:
                     if str(i['type']) not in params:
-                        lat, lon = float(i['lat']), float(i['lon'])
-                        data = np.append(data, [[lat, lon]], axis=0)
+                        p = Point(float(i['lat']), float(i['lon']))
+                        data = np.append(data, p)
             self.data = data
         # if error while reading file, print error message and clear data array
         except IOError as e:
@@ -47,17 +47,6 @@ class DataCollector():
             Coordinates of points
         """
         return self.data
-
-    def plotData(self):
-        """ Plot collected data.
-
-        Notes
-        -----
-        Uses matplotlib.pyplot for showing data.
-        """
-        plt.figure()
-        plt.scatter(self.data[:, 0], self.data[:, 1])
-        plt.show()
 
     def exportToTextFile(self, filename):
         """ Record data to text file.

@@ -6,9 +6,9 @@ import geojson as json
 from math import ceil
 from geographiclib.geodesic import Geodesic
 
-from routelib import route
+from routelib import route, Point
 from ClusteringMachine import ClusteringMachine
-from InitMachine import getBounds, grid as makeGrid
+from InitMachine import getBounds
 
 from multiprocessing.dummy import Pool as ThreadPool
 THREADS = 4
@@ -36,12 +36,12 @@ def dump(data, filename):
 
 def jarvis(x):
     def rotate(a, b, c):
-        return (b[1] - a[1]) * (c[0] - b[0]) - (b[0] - a[0]) * (c[1] - b[1])
+        return (b.lon - a.lon) * (c.lat - b.lat) - (b.lat - a.lat) * (c.lon - b.lon)
 
     n = len(x)
     p = list(range(n))
-    for i in range(1,n):
-        if x[p[i]][1] < x[p[0]][1]:
+    for i in range(1, n):
+        if x[p[i]].lon < x[p[0]].lon:
             p[i], p[0] = p[0], p[i]
     h = [p[0]]
     del p[0]
@@ -62,10 +62,31 @@ def inside(point, hull):
     result = False
     j = hull[-1]
     for k in hull:
-        if ((k[0] > point[0]) != (j[0] > point[0])) and (point[1] < (j[1] - k[1]) * (point[0] - k[0]) / (j[0] - k[0]) + k[1]):
+        if ((k.lat > point.lat) != (j.lat > point.lat)) and (point.lon < (j.lon - k.lon) * (point.lat - k.lat) / (j.lat - k.lat) + k.lon):
             result = not result
         j = k
     return result
+
+def makeGrid(size, bounds, decimals):
+    delta_lt = (bounds[2] - bounds[0]) / size[0]
+    delta_ln = (bounds[3] - bounds[1]) / size[1]
+    curr_lt = bounds[0] + delta_lt / 2
+    curr_ln = bounds[1] + delta_ln / 2
+
+    grid = np.empty(0, object)
+
+    grid = np.append(grid, Point(curr_lt, curr_ln).round(decimals))
+    for i in range(size[0] * size[1]):
+        if curr_ln + delta_ln > bounds[3]:
+            if curr_lt + delta_lt > bounds[2]:
+                break
+            else:
+                curr_lt += delta_lt
+                curr_ln -= delta_ln * (size[0] - 1)
+        else:
+            curr_ln += delta_ln
+        grid = np.append(grid, Point(curr_lt, curr_ln).round(decimals))
+    return grid
 
 class EM():
     maxIter = None
@@ -150,14 +171,8 @@ class EM():
             size = int(ceil(size / 50))
             print('  Done. Size of grid: {s}x{s}'.format(s=size))
             print('Making grid...')
-            grid = np.delete(makeGrid([size, size], getBounds(X), round_=5), 2, axis=1)
+            grid = makeGrid([size, size], getBounds(X), 5)
             print('  Done. Number of elements: {}'.format(len(grid)))
-            if locate == 'before':
-                print('Locating metric table...')
-                self.route.start()
-                grid = np.apply_along_axis(lambda x: self.route.locate(x).round(5), 1, grid)
-                self.route.stop()
-                print('  Done.')
             print('Finding unnecessary elements...')
             outside = []
             for i, j in enumerate(grid):
@@ -165,14 +180,14 @@ class EM():
                     outside.append(i)
             grid = np.delete(grid, outside, axis=0)
             print('  Done. Number of elements was reduced to {}'.format(len(grid)))
-            if locate == 'after':
+            if locate:
                 print('Locating metric table...')
                 self.route.start()
                 grid = np.apply_along_axis(lambda x: self.route.locate(x).round(5), 1, grid)
                 self.route.stop()
                 print('  Done.')
             print('Removing duplicates...')
-            grid = np.vstack({tuple(row) for row in grid}) # this deletes dublicates
+            grid = np.vstack({row for row in grid}) # this deletes dublicates
             print('  Done. Final number of elements: {}'.format(len(grid)))
             self.table = np.append(X, grid, axis=0)
             np.savetxt('{}/table.txt'.format(path), self.table)

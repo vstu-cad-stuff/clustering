@@ -3,7 +3,7 @@ import geojson as json
 import numpy as np
 import os
 
-def grid(grid, bounds, round_=None):
+def grid(grid, bounds):
     """ Initialize centers on grid.
 
     Parameters
@@ -20,12 +20,8 @@ def grid(grid, bounds, round_=None):
 
     centers = np.empty([0, 3], dtype='object')
 
-    if round_ is None:
-        centers = np.append(centers,
-            [[curr_lt, curr_ln, 0]], axis=0)
-    else:
-        centers = np.append(centers,
-            [[round(curr_lt, round_), round(curr_ln, round_), 0]], axis=0)
+    centers = np.append(centers,
+        [[curr_lt, curr_ln, 0]], axis=0)
     for i in range(grid[0] * grid[1]):
         if curr_ln + delta_ln > bounds[3]:
             if curr_lt + delta_lt > bounds[2]:
@@ -35,12 +31,8 @@ def grid(grid, bounds, round_=None):
                 curr_ln -= delta_ln * (grid[0] - 1)
         else:
             curr_ln += delta_ln
-        if round_ is None:
-            centers = np.append(centers,
-                [[curr_lt, curr_ln, i + 1]], axis=0)
-        else:
-            centers = np.append(centers,
-                [[round(curr_lt, round_), round(curr_ln, round_), i + 1]], axis=0)
+        centers = np.append(centers,
+            [[curr_lt, curr_ln, i + 1]], axis=0)
     return centers
 
 def random(count, bounds):
@@ -101,13 +93,13 @@ def getBounds(points):
     # most bottom, most left, most top, and most right
     b, l, t, r = [points[0]] * 4
     for p in points[1:]:
-        if p[0] > t[0]:
+        if p.lat > t.lat:
             t = p
-        if p[0] < b[0]:
+        if p.lat < b.lat:
             b = p
-        if p[1] > r[1]:
+        if p.lon > r.lon:
             r = p
-        if p[1] < l[1]:
+        if p.lon < l.lon:
             l = p
-    bounds = [b[0], l[1], t[0], r[1]]
+    bounds = [b.lat, l.lon, t.lat, r.lon]
     return bounds

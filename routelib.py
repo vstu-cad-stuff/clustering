@@ -214,19 +214,21 @@ class route():
         percent = 0
         digits = 0
         last = -1
+        time_one = 0.007
         from math import floor
 
         if self.osrm:
             self.table = np.zeros([dim, dim])
-            for i in range(len(X)):
+            for i in range(dim):
                 for j in range(i + 1, dim):
                     self.table[i][j] = self.route_distance(X[i], X[j])
                     self.table[j][i] = self.table[i][j]
                     completed = i * dim + j
                     all = dim * dim
                     percent = floor(completed / all * 1000) / 10
+                    left = round(((dim - i) ** 2 / 2 - i - (dim - j)) * time_one)
 
-                    text = '  {}% ({} / {})'.format(percent, completed, all)
+                    text = '  {}% ({} / {}; estimated time: {}s)'.format(percent, completed, all, left)
                     delete = '\r' * digits
                     if percent != last:
                         last = percent

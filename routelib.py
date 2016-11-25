@@ -22,6 +22,15 @@ class Point():
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
 
+    def __iter__(self):
+        return iter([self.lat, self.lon])
+
+    def __add__(self, other):
+        return Point(self.lat + other.lat, self.lon + other.lon)
+
+    def __sub__(self, other):
+        return Point(self.lat - other.lat, self.lon - other.lon)
+
     def reverso(self):
         return '{},{}'.format(self.lon, self.lat)
 
@@ -102,7 +111,7 @@ class route():
                 "&geometry=false&alt=false".format(a, b)
         elif self.API == 5:
             url = 'http://127.0.0.1:5000/route/v1/car/{};{}?overview=false' \
-                '&alternatives=false&steps=false'.format(a.reverso, b.reverso)
+                '&alternatives=false&steps=false'.format(a.reverso(), b.reverso())
 
         # get response
         response = request(url)
@@ -119,8 +128,6 @@ class route():
             if data['code'] != 'Ok':
                 raise OSRMError('Error routing: {}'.format(data['message']))
             else:
-                print(data['routes'][0]['distance'])
-                exit()
                 return data['routes'][0]['distance']
 
     def locate(self, a):
@@ -130,7 +137,7 @@ class route():
         if self.API == 4:
             url = 'http://127.0.0.1:5000/locate?loc={}'.format(a)
         elif self.API == 5:
-            url = 'http://127.0.0.1:5000/nearest/v1/car/{}'.format(a.reverso)
+            url = 'http://127.0.0.1:5000/nearest/v1/car/{}'.format(a.reverso())
         response = request(url)
         data = response.json()
         # if can't locate

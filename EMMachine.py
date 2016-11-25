@@ -73,7 +73,7 @@ def makeGrid(size, bounds, decimals):
     curr_lt = bounds[0] + delta_lt / 2
     curr_ln = bounds[1] + delta_ln / 2
 
-    grid = np.empty(0, object)
+    grid = np.empty(0, dtype='object')
 
     grid = np.append(grid, Point(curr_lt, curr_ln).round(decimals))
     for i in range(size[0] * size[1]):
@@ -103,7 +103,10 @@ class EM():
         else:
             self.dist_table = None
         if table:
-            self.table = np.loadtxt(table)
+            table = np.loadtxt(table, dtype='object')
+            table = list(map(lambda x: x[2:-1].split(','), table))
+            table = np.array(list(map(lambda x: Point(float(x[0]), float(x[1])), table)))
+            self.table = table
         else:
             self.table = None
 
@@ -112,8 +115,9 @@ class EM():
         return r
 
     def closer(self, a):
-        idx = (np.abs(self.table - a)).argmin(axis=0)
-        return self.table[idx[0]]
+        idx = (np.abs([list(i) for i in self.table] - a)).argmin()
+        print(idx)
+        return self.table[idx]
 
     def geodist(self, a, b):
         r = Geodesic.WGS84.Inverse(a[0], a[1], b[0], b[1])['s12']
@@ -187,10 +191,10 @@ class EM():
                 self.route.stop()
                 print('  Done.')
             print('Removing duplicates...')
-            grid = np.vstack({row for row in grid}) # this deletes dublicates
+            grid = np.array(list(map(lambda x: Point(x[0], x[1]), {tuple(row) for row in grid}))) # this deletes dublicates
             print('  Done. Final number of elements: {}'.format(len(grid)))
             self.table = np.append(X, grid, axis=0)
-            np.savetxt('{}/table.txt'.format(path), self.table)
+            np.savetxt('{}/table.txt'.format(path), self.table, fmt='%s')
             print('Now {} points will be clustering to {} clusters using additional {} elements'.format(self.x_len, self.c_len, len(grid)))
         else:
             print('Now {} points will be clustering to {} clusters'.format(self.x_len, self.c_len))
@@ -226,7 +230,8 @@ class EM():
         self.X = list(range(len(X)))
         # finding closest points to cluster centers
         i = C[:, 2]
-        C = np.array(list(map(lambda x: self.closer(x), C[:, :2])))
+        C = np.array(list(map(lambda x: list(self.closer(x)), C[:, :2])))
+        print(C)
         self.C = np.append(C, np.reshape(i, (i.shape[0], 1)), axis=1)
         # while clustering isn't completed
         while not self.stop(iteration, c_old, self.C, l_old, self.L):

@@ -115,9 +115,8 @@ class EM():
         return r
 
     def closer(self, a):
-        idx = (np.abs([list(i) for i in self.table] - a)).argmin()
-        print(idx)
-        return self.table[idx]
+        idx = (np.abs(np.array([list(i) for i in self.table]) - a)).argmin(axis=0)
+        return self.table[idx[0]]
 
     def geodist(self, a, b):
         r = Geodesic.WGS84.Inverse(a[0], a[1], b[0], b[1])['s12']

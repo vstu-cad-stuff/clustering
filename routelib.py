@@ -28,6 +28,12 @@ class Point():
     def __add__(self, other):
         return Point(self.lat + other.lat, self.lon + other.lon)
 
+    def __mul__(self, value):
+        return Point(self.lat * value, self.lon * value)
+
+    def __div__(self, value):
+        return Point(self.lat / value, self.lon / value)
+
     def __sub__(self, other):
         return Point(self.lat - other.lat, self.lon - other.lon)
 

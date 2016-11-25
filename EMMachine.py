@@ -123,8 +123,8 @@ class EM():
         return r
 
     def index(self, a):
-        a = np.where(self.table == a)[0]
-        a = max(zip(*np.unique(a, return_counts=True)), key=lambda x: x[1])[0]
+        a = Point(a[0], a[1])
+        a = np.where(self.table == a)[0][0]
         return a
 
     def tab_dist(self, a, b):
@@ -145,13 +145,14 @@ class EM():
         # D = list(POOL.map(lambda j: self.cloop(i, j), range(self.c_len)))
         # sort distances ascending
         D.sort(key=lambda x: x[0])
+        # D = list(POOL.map(lambda j: self.cloop(i, j), range(self.c_len)))
         # pick number of cluster, which center has the smallest
         # distance to point
         m = D[0][1]
         # set label of point
         self.L[i] = self.C[m][2]
         self.P[m] += 1
-        self.A[m] = np.append(self.A[m], [self.table[i]], axis=0)
+        self.A[m] = np.append(self.A[m], self.table[i])
 
     def fit(self, X, C, locate, path):
         # set initial parameters
@@ -230,7 +231,6 @@ class EM():
         # finding closest points to cluster centers
         i = C[:, 2]
         C = np.array(list(map(lambda x: list(self.closer(x)), C[:, :2])))
-        print(C)
         self.C = np.append(C, np.reshape(i, (i.shape[0], 1)), axis=1)
         # while clustering isn't completed
         while not self.stop(iteration, c_old, self.C, l_old, self.L):
@@ -241,7 +241,7 @@ class EM():
             print('Iteration {}:'.format(iteration + 1))
             # create empty python array
             # each item will contain all the points belongs to specific cluster
-            self.A = [np.empty([0, 2]) for i in range(self.c_len)]
+            self.A = [np.empty(0, dtype='object') for i in range(self.c_len)]
             # for each point
             print('  assigning points...')
             l_old = np.array(self.L)
@@ -254,7 +254,7 @@ class EM():
             filename = '{}/r_centers_{}.js'.format(path, iteration + 1)
             dump(cc, filename)
             xc = X
-            xc = list(map(lambda x, y: (np.append(x, y)).tolist(), xc, self.L))
+            xc = list(map(lambda x, y: (np.append(list(x), y)).tolist(), xc, self.L))
             filename = '{}/r_points_{}.js'.format(path, iteration + 1)
             dump(xc, filename)
 
@@ -268,7 +268,7 @@ class EM():
                 # if it contains points
                 if self.P[i] != 0:
                     # calculate center of cluster
-                    k = np.array(np.round(np.mean(self.A[i], axis=0).astype(np.double), decimals=6), dtype='object')
+                    k = np.array(np.round(np.mean(list(map(list, self.A[i])), axis=0).astype(np.double), decimals=6), dtype='object')
                     mu[i] = np.append(k, i)
                 else:
                     d = np.round(self.C[i][:2].astype(np.double), decimals=6)
@@ -277,7 +277,7 @@ class EM():
             print('  replacing old centers with new...')
             # equate current centroids to calculated
             i = mu[:, 2]
-            mu = np.array(list(map(lambda x: self.closer(x), mu[:, :2])))
+            mu = np.array(list(map(lambda x: list(self.closer(x)), mu[:, :2])))
             self.C = np.append(mu, np.reshape(i, (i.shape[0], 1)), axis=1)
             # increment iteration counter
             iteration += 1

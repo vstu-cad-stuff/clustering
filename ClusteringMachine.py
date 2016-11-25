@@ -115,7 +115,7 @@ class ClusteringMachine():
         X = list(range(len(self.X)))
         # for each point in X array
         for i in X:
-            X[i] = {'lat': self.X[i][0], 'lon': self.X[i][1], 'clusterId': self.labels[i]}
+            X[i] = {'lat': self.X[i].lat, 'lon': self.X[i].lon, 'clusterId': self.labels[i]}
 
         try:
             path = os.path.dirname(filename)

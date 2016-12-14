@@ -2,8 +2,8 @@ import numpy as np
 
 class Geodata:
     def __init__(self, lat, lon):
-        self.lat = lat
-        self.lon = lon
+        self.lat = lat # y coord
+        self.lon = lon # x coord
         self.cls = Geodata
 
     @classmethod

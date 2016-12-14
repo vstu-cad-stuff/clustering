@@ -6,6 +6,10 @@ class Geodata:
         self.lon = lon
         self.cls = Geodata
 
+    @classmethod
+    def array(cls, array):
+        return cls(array[0], array[1])
+
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
 
@@ -27,6 +31,9 @@ class Geodata:
     def __str__(self):
         return '{},{}'.format(self.lat, self.lon)
 
+    def latlon(self):
+        return (self.lat, self.lon)
+
     def reverso(self):
         return Geodata(self.lon, self.lat)
 
@@ -42,11 +49,10 @@ class Point(Geodata):
 
     def __str__(self):
         return '{},{}:{}'.format(self.lat, self.lon, self.cid)
-    
-    def from_geodata(*args):
-        data = args[1] if len(args) > 2 else args[0]
-        cid = args[2] if len(args) > 2 else args[1]
-        return Point(data.lat, data.lon, cid)
+
+    @classmethod
+    def geodata(cls, data, cid):
+        return cls(data.lat, data.lon, cid)
 
 class Cluster(Point):
     def __init__(self, lat, lon, cid, pop):
@@ -58,8 +64,7 @@ class Cluster(Point):
 
     def __str__(self):
         return '{},{}:{}:{}'.format(self.lat, self.lon, self.cid, self.pop)
-    
-    def from_point(*args):
-        point = args[1] if len(args) > 2 else args[0]
-        pop = args[2] if len(args) > 2 else args[1]
-        return Cluster(point.lat, point.lon, point.cid, pop)
+
+    @classmethod
+    def point(cls, point, pop):
+        return cls(point.lat, point.lon, point.cid, pop)

@@ -1,3 +1,5 @@
+import numpy as np
+
 class Geodata:
     def __init__(self, lat, lon):
         self.lat = lat
@@ -26,7 +28,7 @@ class Geodata:
         return '{},{}'.format(self.lat, self.lon)
 
     def reverso(self):
-        return '{},{}'.format(self.lon, self.lat)
+        return Geodata(self.lon, self.lat)
 
     def round(self, decimals):
         return self.cls(round(self.lat, decimals), round(self.lon, decimals))
@@ -40,6 +42,11 @@ class Point(Geodata):
 
     def __str__(self):
         return '{},{}:{}'.format(self.lat, self.lon, self.cid)
+    
+    def from_geodata(*args):
+        data = args[1] if len(args) > 2 else args[0]
+        cid = args[2] if len(args) > 2 else args[1]
+        return Point(data.lat, data.lon, cid)
 
 class Cluster(Point):
     def __init__(self, lat, lon, cid, pop):
@@ -51,3 +58,8 @@ class Cluster(Point):
 
     def __str__(self):
         return '{},{}:{}:{}'.format(self.lat, self.lon, self.cid, self.pop)
+    
+    def from_point(*args):
+        point = args[1] if len(args) > 2 else args[0]
+        pop = args[2] if len(args) > 2 else args[1]
+        return Cluster(point.lat, point.lon, point.cid, pop)

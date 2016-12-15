@@ -10,16 +10,38 @@ parser.add_argument('-t', '--table', nargs=1, help='Load metric table from speci
 parser.add_argument('-r', '--random', type=int, nargs=1, help='Initialize clusters by uniform distribution of points. Argument is the number of clusters.')
 parser.add_argument('-g', '--grid', type=int, nargs=2, help='Initialize clusters by grid. Arguments are numbers of columns and rows of grid.')
 parser.add_argument('-d', '--distances', nargs=1, help='Load metric distances table from specified file.')
+parser.add_argument('--threads', type=int, nargs=1, help='', default=4)
 
-# ----------------------------------
+# ============== imports ==============
 
+from __future__ import division, print_function
+from math import ceil, floor
 import random as rnd
-import json as json
-import numpy as np
 import os
+import numpy as np
+import json
+from geographiclib.geodesic import Geodesic
+from multiprocessing.dummy import Pool as ThreadPool
 from geodata import Geodata as Gd, Point as Pt, Cluster as Cl
+from routelib import Route
 
-# ============== Init ==============
+# ============== data files ==============
+
+def load_file(filename, params=[]):
+    with open(filename) as file_:
+        arr = json.loads(file_.readlines()[0])
+    data = [Pt(float(i['lat']), float(i['lon']), 0) for i in arr if i['type'] not in params]
+    data = np.array(data)
+    return data
+
+def export_file(filename, data):
+    path = os.path.dirname(filename)
+    if not (os.path.exists(path)):
+        os.makedirs(path)
+    with open(filename, 'w') as file_:
+        json.dump(data, file_)
+
+# ============== init ==============
 
 def get_bounds(points):
     """
@@ -53,7 +75,7 @@ def init_grid(grid, bounds):
 
     return centers
 
-def random(count, bounds):
+def init_rnd(count, bounds):
     """ Initialize centers by random.
 
     Parameters
@@ -64,62 +86,69 @@ def random(count, bounds):
     centers = np.array([Cl(rnd.uniform(bounds[0], bounds[2]), rnd.uniform(bounds[1], bounds[3]), i) for i in range(count)])
     return centers
 
-def file(filename, params=[]):
+def init_file(filename, params=[]):
     """ Initialize centers from file.
 
     Parameters
     ----------
-    filename : int
-        Specify source file name.
+    filename : str
     params : list, default empty list
-        Specifies types of points which will be loaded.
     """
     with open(filename, 'r') as file_:
         arr = json.load(file_)
-    centers = np.empty((0), object)
-    k = 0
-    for i in arr:
-        if str(i['type']) in params or params == []:
-            lat, lon, id = float(i['lat']), float(i['lon']), k
-            centers = np.append(centers, Cl(lat, lon, id, 0))
-            k += 1
-    return centers
+    arr = [i for i in arr if i['type'] not in params]
+    data = [Cl(float(i['lat']), float(i['lon']), k, 0) for k, i in enumerate(arr)]
+    data = np.array(data)
+    return data
 
-# ============== Global ==============
+# ============== global ==============
 
-def inline_print(previous, text):
-    digits = len(previous)
+args = parser.parse_args()
+
+threads = args.threads
+pool = ThreadPool(processes=threads)
+
+route = Route()
+
+def inline_print(digits, text):
     delete = '\r' * digits
     print('{}{}'.format(delete, text), end='')
+    return len(text)
 
-
-def make_table(self, X):
-    dim = len(X)
+def make_table(X):
+    lx = len(X)
     percent = 0
     digits = 0
     last = -1
     time_one = 0.007
-    from math import floor
+    table = np.zeros([lx, lx])
+    completed = 0
+    all = lx * lx
 
-    if self.osrm:
-        self.table = np.zeros([dim, dim])
-        for i in range(dim):
-            for j in range(i + 1, dim):
-                self.table[i][j] = self.route_distance(X[i], X[j])
-                self.table[j][i] = self.table[i][j]
-                completed = i * dim + j
-                all = dim * dim
-                percent = floor(completed / all * 1000) / 10
-                left = round(((dim - i) ** 2 / 2 - i - (dim - j)) * time_one)
+    def i_loop(i, _=None):
+        for j in range(i + 1, lx):
+            table[i][j] = route.distance(X[i], X[j])
+            table[j][i] = table[i][j]
+            completed += 2
 
-                text = '  {}% ({} / {}; estimated time: {}s)'.format(percent, completed, all, left)
-                delete = '\r' * digits
-                if percent != last:
-                    last = percent
-                    print('{0}{1}'.format(delete, text), end='')
-                    digits = len(text)
+            percent = floor(completed / all * 1000) / 10
+            if percent != last:
+                left = round(all - completed) * time_one) # approx time left
+                digits = inline_print(digits, '  {}% ({} / {}; estimated time: {}s)'.format(percent, completed, all, left))
+                last = percent
 
-        text = '  100% ({a} / {a})'.format(a=all)
-        delete = '\r' * digits
-        print('{0}{1}'.format(delete, text), end='')
-    return self.table
+    res = asyncWorker(range(lx), i_loop)
+    inline_print(digits, '  100% ({a} / {a})'.format(a=all))
+    return table
+
+# ============== main ==============
+
+if __name__ == '__main__':
+
+    X = None
+    labels = None
+    population = None
+    clusterCenters = None
+    numCluster = None
+    clusterInstance = None
+    fitTime = 0

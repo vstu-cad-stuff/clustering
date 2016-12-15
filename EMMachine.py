@@ -91,7 +91,9 @@ class EM():
         return r
 
     def closer(self, a):
-        idx = (np.abs(self.table - a)).argmin(axis=0)
+        idx = self.table - a
+        idx = list(map(lambda x: x[0] + 1j * x[1], idx))
+        idx = np.abs(np.array(idx)).argmin()
         return self.table[idx[0]]
 
     def geodist(self, a, b):

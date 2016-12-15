@@ -1,4 +1,5 @@
 import numpy as np
+import json
 
 class Geodata:
     def __init__(self, lat, lon):
@@ -39,6 +40,12 @@ class Geodata:
 
     def round(self, decimals):
         return self.cls(round(self.lat, decimals), round(self.lon, decimals))
+    
+    def to_geodata(self):
+        return Geodata.array(self.latlon)
+    
+    def json(self):
+        return json.dumps(self.__dict__)
 
 class Point(Geodata):
     def __init__(self, lat, lon, cid):
@@ -47,12 +54,12 @@ class Point(Geodata):
         self.cid = cid
         self.cls = Point
 
-    def __str__(self):
-        return '{},{}:{}'.format(self.lat, self.lon, self.cid)
-
     @classmethod
     def geodata(cls, data, cid):
         return cls(data.lat, data.lon, cid)
+
+    def __str__(self):
+        return '{},{}:{}'.format(self.lat, self.lon, self.cid)
 
 class Cluster(Point):
     def __init__(self, lat, lon, cid, pop):
@@ -61,10 +68,13 @@ class Cluster(Point):
         self.cid = cid
         self.pop = pop
         self.cls = Cluster
-
-    def __str__(self):
-        return '{},{}:{}:{}'.format(self.lat, self.lon, self.cid, self.pop)
-
+    
     @classmethod
     def point(cls, point, pop):
         return cls(point.lat, point.lon, point.cid, pop)
+
+    def __str__(self):
+        return '{},{}:{}:{}'.format(self.lat, self.lon, self.cid, self.pop)
+    
+    def to_point(self):
+        return Point(self.lat, self.lon, self.cid)

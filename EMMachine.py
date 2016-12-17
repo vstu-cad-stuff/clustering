@@ -94,7 +94,7 @@ class EM():
         idx = self.table - a
         idx = list(map(lambda x: x[0] + 1j * x[1], idx))
         idx = np.abs(np.array(idx)).argmin()
-        return self.table[idx[0]]
+        return self.table[idx]
 
     def geodist(self, a, b):
         r = Geodesic.WGS84.Inverse(a[0], a[1], b[0], b[1])['s12']

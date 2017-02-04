@@ -2,3 +2,4 @@ geojson >= 1.3.2
 numpy >= 1.9
 geographiclib == 1.46.3
 multiprocessing == 3.4.3
+scipy >= 0.12

@@ -12,7 +12,9 @@ from ClusteringMachine import ClusteringMachine
 from InitMachine import getBounds, grid as makeGrid
 
 from multiprocessing.dummy import Pool as ThreadPool
-THREADS = 4
+from multiprocessing import cpu_count
+#from multiprocessing import Pool as ThreadPool, cpu_count #.dummy import Pool as ThreadPool
+THREADS = cpu_count()
 POOL = ThreadPool(processes=THREADS)
 
 def asyncWorker(iterator, func, data=None):
@@ -162,7 +164,7 @@ class EM():
             print('Searching for bounds of points set...')
             bnds = getBounds(X)
             size_x, size_y = self.geodist(bnds[2:0:-1], bnds[2:5]), self.geodist(bnds[::3], bnds[2:5])
-            size_x, size_y = list(map(lambda x: int(ceil(x / 50)), [size_x, size_y]))
+            size_x, size_y = list(map(lambda x: int(ceil(x / 100)), [size_x, size_y]))
             print('  Done. Size of grid: {}x{}'.format(size_x, size_y))
             print('Making grid...')
             grid = np.delete(makeGrid([size_x, size_y], getBounds(X), round_=5), 2, axis=1)

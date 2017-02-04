@@ -192,35 +192,6 @@ class route():
                     dist = self.viaroute(c, d)
         return dist
 
-    def make_table(self, X):
-        dim = len(X)
-        percent = 0
-        digits = 0
-        last = -1
-        from math import floor
-
-        if self.osrm:
-            self.table = np.zeros([dim, dim])
-            for i in range(len(X)):
-                for j in range(i + 1, dim):
-                    self.table[i][j] = self.route_distance(X[i], X[j])
-                    self.table[j][i] = self.table[i][j]
-                    completed = i * dim + j
-                    all = dim * dim
-                    percent = floor(completed / all * 1000) / 10
-
-                    text = '  {}% ({} / {})'.format(percent, completed, all)
-                    delete = '\r' * digits
-                    if percent != last:
-                        last = percent
-                        print('{0}{1}'.format(delete, text), end='')
-                        digits = len(text)
-
-            text = '  100% ({a} / {a})'.format(a=all)
-            delete = '\r' * digits
-            print('{0}{1}'.format(delete, text), end='')
-        return self.table
-
     def stop(self):
         """ Stop local OSRM machine.
 

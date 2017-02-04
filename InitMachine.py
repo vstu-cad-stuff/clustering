@@ -13,34 +13,16 @@ def grid(grid, bounds, round_=None):
     bounds : array {bottom_border, left_border, top_border, right_border}
         Specify borders.
     """
-    delta_lt = (bounds[2] - bounds[0]) / grid[0]
-    delta_ln = (bounds[3] - bounds[1]) / grid[1]
-    curr_lt = bounds[0] + delta_lt / 2
-    curr_ln = bounds[1] + delta_ln / 2
+    lt = np.linspace(bounds[0], bounds[2], grid[0])
+    ln = np.linspace(bounds[1], bounds[3], grid[1])
+    lb = iter(range(grid[0] * grid[1]))
 
     centers = np.empty([0, 3], dtype='object')
 
-    if round_ is None:
-        centers = np.append(centers,
-            [[curr_lt, curr_ln, 0]], axis=0)
-    else:
-        centers = np.append(centers,
-            [[round(curr_lt, round_), round(curr_ln, round_), 0]], axis=0)
-    for i in range(grid[0] * grid[1]):
-        if curr_ln + delta_ln > bounds[3]:
-            if curr_lt + delta_lt > bounds[2]:
-                break
-            else:
-                curr_lt += delta_lt
-                curr_ln -= delta_ln * (grid[0] - 1)
-        else:
-            curr_ln += delta_ln
-        if round_ is None:
-            centers = np.append(centers,
-                [[curr_lt, curr_ln, i + 1]], axis=0)
-        else:
-            centers = np.append(centers,
-                [[round(curr_lt, round_), round(curr_ln, round_), i + 1]], axis=0)
+    x = [[round(clt, round_), round(cln, round_), next(lb)] for clt in lt for cln in ln]
+    for i in x:
+        centers = np.append(centers, [i], axis=0)
+
     return centers
 
 def random(count, bounds):

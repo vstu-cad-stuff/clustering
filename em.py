@@ -14,7 +14,6 @@ parser.add_argument('-t', '--table', help='Load metric table from file which nam
 parser.add_argument('-r', '--random', type=int, help='Initialize clusters by uniform distribution of points. Argument is the number of clusters.')
 parser.add_argument('-g', '--grid', type=int, nargs=2, help='Initialize clusters by grid. Arguments are width and height of grid.')
 parser.add_argument('-d', '--distances', help='Load metric distances table from file which name is the argument.')
-parser.add_argument('-l', '--locate', help='Locate metric table elements to roads _before_ finding unnecessary elements.', action="store_true")
 
 args = parser.parse_args()
 
@@ -54,9 +53,11 @@ else:
 em = EM(X, clusters, maxIter=iterationsCount, distances=args.distances, table=args.table)
 
 # perform clustering
-em.fit(locate='before' if args.locate else 'after')
+em.fit()
 # print info
 print('Fit time: {}, clusters: {}. Saved in {}'.format(em.fitTime, em.numCluster, em.path))
+with open('{}/result.txt'.format(em.path), 'w') as _file:
+    _file.write('Fit time: {}, clusters: {}, iterations: {}. Proceeded {} distance calculations, approximate time: {}s'.format(em.fitTime, em.numCluster, em.iteration, em.all, em.approx))
 
 # export centers to 'centers.js'
 em.exportCentersToTextFile('{}/cls.js'.format(em.path))
